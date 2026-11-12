@@ -1,7 +1,8 @@
 import { dayIndexFor } from '../core/dayIndex.ts';
+import { nextLevel, type RatedSession } from '../core/adapt.ts';
 import { planFor } from '../core/plan.ts';
 import { currentStreak, longestStreak } from '../core/streak.ts';
-import type { AppState, Exercise, ExerciseKind, LocalDay } from '../core/types.ts';
+import type { AppState, Completion, Exercise, ExerciseKind, LocalDay, Rating } from '../core/types.ts';
 
 export type LessonMedia =
   | { readonly type: 'video'; readonly embedUrl: string }
@@ -48,7 +49,9 @@ export function sessionView(
   today: LocalDay,
   catalog: readonly Exercise[],
 ): SessionView {
-  const plan = planFor(state.level, dayIndexFor(today, state.completions), catalog, undefined, today);
+  const completedToday = state.completions.find((c) => c.date === today);
+  const level = completedToday?.level ?? state.level;
+  const plan = planFor(level, dayIndexFor(today, state.completions), catalog, undefined, today);
   return {
     date: today,
     levelLabel: `Level ${plan.level} of 5`,
@@ -63,12 +66,15 @@ export function sessionView(
     totalLabel: `Total ${minutesLabel(plan.totalMinutes)}`,
     currentStreak: currentStreak(state.completions, today),
     longestStreak: longestStreak(state.completions),
-    done: state.completions.some((c) => c.date === today),
+    done: completedToday !== undefined,
   };
 }
 
-/** Idempotent: a day already completed returns the same state. */
-export function markDone(state: AppState, today: LocalDay): AppState {
+const isRated = (c: Completion): c is RatedSession => c.rating !== undefined;
+
+/** Idempotent: a day already completed returns the same state. The new level applies from the next day. */
+export function markDone(state: AppState, today: LocalDay, rating?: Rating): AppState {
   if (state.completions.some((c) => c.date === today)) return state;
-  return { ...state, completions: [...state.completions, { date: today, level: state.level }] };
+  const completions = [...state.completions, { date: today, level: state.level, rating }];
+  return { ...state, completions, level: nextLevel(state.level, completions.filter(isRated)) };
 }

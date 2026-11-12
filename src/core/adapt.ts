@@ -1,6 +1,6 @@
-import { LEVELS, type Level, type LocalDay } from './types.ts';
+import { LEVELS, type Level, type LocalDay, type Rating } from './types.ts';
 
-export type Rating = 'easy' | 'right' | 'hard';
+export type { Rating };
 
 export type RatedSession = {
   readonly date: LocalDay;

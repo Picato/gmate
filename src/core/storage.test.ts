@@ -82,6 +82,30 @@ describe('LocalStorage on bad data', () => {
   });
 });
 
+describe('ratings', () => {
+  it('round-trips a rating through LocalStorage', () => {
+    const storage = new LocalStorage(fakeStore());
+    const rated: AppState = {
+      ...sample,
+      completions: [{ date: day('2026-03-01'), level: 3, rating: 'hard' }],
+    };
+    storage.save(rated);
+    expect(storage.load().completions).toEqual(rated.completions);
+  });
+
+  it('loads old data without ratings and drops an invalid rating', () => {
+    const text = JSON.stringify({
+      level: 3,
+      completions: [
+        { date: '2026-03-01', level: 3 },
+        { date: '2026-03-02', level: 3, rating: 'meh' },
+      ],
+    });
+    const { completions } = new LocalStorage(fakeStore({ [STORAGE_KEY]: text })).load();
+    expect(completions.map((c) => c.rating)).toEqual([undefined, undefined]);
+  });
+});
+
 describe('parseLocalDay', () => {
   it.each(['2026-02-30', '2026-13-01', '26-01-01', '2026-1-1', ''])('rejects %j', (raw) => {
     expect(parseLocalDay(raw)).toBeUndefined();

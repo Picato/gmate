@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CATALOG } from '../data/catalog.ts';
 import { defaultState } from '../core/storage.ts';
-import { parseLocalDay, type AppState, type Exercise, type LocalDay } from '../core/types.ts';
+import { parseLocalDay, type AppState, type Exercise, type LocalDay, type Rating } from '../core/types.ts';
 import { markDone, sessionView } from './sessionView.ts';
 
 const day = (s: string): LocalDay => {
@@ -107,5 +107,54 @@ describe('markDone', () => {
     const before = stateWith('2026-06-08', '2026-06-09');
     const after = sessionView(markDone(before, today), today, CATALOG);
     expect(after).toMatchObject({ currentStreak: 3, longestStreak: 3, done: true });
+  });
+});
+
+describe('markDone with a rating', () => {
+  const ratedDays = (rating: Rating, ...days: string[]): AppState => ({
+    ...defaultState(),
+    completions: days.map((d) => ({ date: day(d), level: 3, rating })),
+  });
+
+  it('stores the rating on the completion', () => {
+    const next = markDone(defaultState(), today, 'right');
+    expect(next.completions).toEqual([{ date: today, level: 3, rating: 'right' }]);
+    expect(next.level).toBe(3);
+  });
+
+  it('promotes after three easy sessions in a row', () => {
+    const next = markDone(ratedDays('easy', '2026-06-08', '2026-06-09'), today, 'easy');
+    expect(next.level).toBe(4);
+  });
+
+  it('does not promote after two easy sessions', () => {
+    expect(markDone(ratedDays('easy', '2026-06-09'), today, 'easy').level).toBe(3);
+  });
+
+  it('demotes after two hard sessions in a row', () => {
+    const next = markDone(ratedDays('hard', '2026-06-09'), today, 'hard');
+    expect(next.level).toBe(2);
+  });
+
+  it('ignores completions that carry no rating', () => {
+    const next = markDone(stateWith('2026-06-08', '2026-06-09'), today, 'easy');
+    expect(next.level).toBe(3);
+  });
+
+  it('keeps the level when done without a rating', () => {
+    expect(markDone(ratedDays('easy', '2026-06-08', '2026-06-09'), today).level).toBe(3);
+  });
+
+  it('stays idempotent: a second rating on the same day changes nothing', () => {
+    const once = markDone(ratedDays('easy', '2026-06-08', '2026-06-09'), today, 'easy');
+    expect(markDone(once, today, 'hard')).toBe(once);
+  });
+
+  it('keeps today plan fixed after the level change and applies the new level tomorrow', () => {
+    const before = sessionView(ratedDays('easy', '2026-06-08', '2026-06-09'), today, CATALOG);
+    const after = markDone(ratedDays('easy', '2026-06-08', '2026-06-09'), today, 'easy');
+    expect(sessionView(after, today, CATALOG).items).toEqual(before.items);
+    expect(sessionView(after, today, CATALOG).levelLabel).toBe('Level 3 of 5');
+    expect(sessionView(after, day('2026-06-11'), CATALOG).levelLabel).toBe('Level 4 of 5');
   });
 });

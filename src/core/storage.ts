@@ -2,6 +2,7 @@ import {
   DEFAULT_LEVEL,
   parseLevel,
   parseLocalDay,
+  parseRating,
   parseReminderTime,
   type AppState,
   type Completion,
@@ -26,7 +27,7 @@ function parseCompletions(raw: unknown): Completion[] {
     if (!isRecord(entry)) continue;
     const date = parseLocalDay(entry.date);
     const level = parseLevel(entry.level);
-    if (date && level) byDay.set(date, { date, level });
+    if (date && level) byDay.set(date, { date, level, rating: parseRating(entry.rating) });
   }
   return [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date));
 }

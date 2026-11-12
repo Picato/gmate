@@ -34,9 +34,13 @@ export type SessionPlan = {
   readonly totalMinutes: number;
 };
 
+export const RATINGS = ['easy', 'right', 'hard'] as const;
+export type Rating = (typeof RATINGS)[number];
+
 export type Completion = {
   readonly date: LocalDay;
   readonly level: Level;
+  readonly rating?: Rating | undefined;
 };
 
 export type Settings = {
@@ -53,6 +57,10 @@ export const DEFAULT_LEVEL: Level = 3;
 
 export function parseLevel(raw: unknown): Level | undefined {
   return LEVELS.find((level) => level === raw);
+}
+
+export function parseRating(raw: unknown): Rating | undefined {
+  return RATINGS.find((rating) => rating === raw);
 }
 
 const DAY_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
