@@ -93,8 +93,19 @@ describe('seeded catalog', () => {
     expect(at(3)).toBeGreaterThanOrEqual(Math.max(at(1), at(2), at(4), at(5)));
   });
 
-  it('carries only the one verified video id, on a lesson', () => {
+  it('carries video ids only on lessons, as 11-character ids', () => {
     const withVideo = CATALOG.filter((e) => e.videoId !== undefined);
-    expect(withVideo.map((e) => [e.kind, e.videoId])).toEqual([['lesson', 'BBz-Jyr23M4']]);
+    expect(withVideo.length).toBeGreaterThan(0);
+    for (const e of withVideo) {
+      expect(e.kind).toBe('lesson');
+      expect(e.videoId).toMatch(/^[A-Za-z0-9_-]{11}$/);
+    }
+  });
+
+  it('has a video lesson at every level and at least 3 in each of levels 2 to 4', () => {
+    const videoLessonsAt = (level: number) =>
+      CATALOG.filter((e) => e.videoId !== undefined && e.minLevel <= level && level <= e.maxLevel);
+    for (const level of [1, 2, 3, 4, 5]) expect(videoLessonsAt(level).length).toBeGreaterThan(0);
+    for (const level of [2, 3, 4]) expect(videoLessonsAt(level).length).toBeGreaterThanOrEqual(3);
   });
 });
