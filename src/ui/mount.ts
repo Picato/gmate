@@ -1,18 +1,11 @@
 import type { Storage } from '../core/storage.ts';
 import type { Exercise, LocalDay } from '../core/types.ts';
+import { el } from './dom.ts';
+import { progressView } from './progressView.ts';
+import { createProgressPanel } from './progressPanel.ts';
 import { levelChangeMessage, markDone, RATING_CHOICES, sessionView, type ItemView, type SessionView } from './sessionView.ts';
 
 type Clock = () => LocalDay;
-
-function el<K extends keyof HTMLElementTagNameMap>(
-  tag: K,
-  props: Partial<HTMLElementTagNameMap[K]> = {},
-  ...children: (Node | string)[]
-): HTMLElementTagNameMap[K] {
-  const node = Object.assign(document.createElement(tag), props);
-  node.append(...children);
-  return node;
-}
 
 function itemNode(item: ItemView): HTMLLIElement {
   const li = el(
@@ -80,6 +73,7 @@ export function mountSession(
   let asking = false;
   const levelNote = el('p', { id: 'level-change', role: 'status' });
   const status = el('p', { id: 'done-status', role: 'status' });
+  const progress = createProgressPanel();
 
   button.addEventListener('click', () => {
     asking = true;
@@ -88,6 +82,7 @@ export function mountSession(
 
   function update(): void {
     const v = view();
+    progress.render(progressView(storage.load(), day));
     current.textContent = String(v.currentStreak);
     longest.textContent = String(v.longestStreak);
     button.disabled = v.done;
@@ -108,6 +103,7 @@ export function mountSession(
     ratingPrompt,
     status,
     levelNote,
+    progress.node,
   );
   update();
 }
