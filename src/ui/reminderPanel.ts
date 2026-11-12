@@ -38,8 +38,12 @@ export function createReminderPanel(storage: Storage, now: () => Date) {
     'section',
     { id: 'reminder' },
     el('h2', {}, 'Daily reminder'),
-    el('label', {}, 'Remind me at ', timeInput),
-    el('div', {}, permission, ' ', permissionStatus),
+    el(
+      'div',
+      { className: 'reminder-row' },
+      el('label', { className: 'reminder-time' }, 'Remind me at ', timeInput),
+      el('div', { className: 'reminder-notify' }, permission, permissionStatus),
+    ),
   );
 
   function start(): void {
