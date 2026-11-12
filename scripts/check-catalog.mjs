@@ -21,13 +21,20 @@ async function check(videoId) {
   }
 }
 
-const entries = CATALOG.filter((e) => e.videoId !== undefined);
-const pending = CATALOG.filter((e) => e.kind === 'lesson' && e.videoId === undefined).length;
+const entries = CATALOG.flatMap((e) =>
+  Object.entries(e.videoIds ?? {})
+    .filter(([, videoId]) => videoId)
+    .map(([language, videoId]) => ({ id: e.id, language, videoId })),
+);
 
 const rows = await Promise.all(
-  entries.map(async (e) => ({ id: e.id, ...(await check(e.videoId)) })),
+  entries.map(async ({ id, language, videoId }) => ({ id, language, ...(await check(videoId)) })),
 );
 console.table(rows);
-console.log(`${pending} lesson(s) still have no videoId.`);
+
+for (const language of ['en', 'vi']) {
+  const missing = CATALOG.filter((e) => e.kind === 'lesson' && !e.videoIds?.[language]).map((e) => e.id);
+  console.log(`${language}: ${missing.length} lesson(s) without a video${missing.length ? ` (${missing.join(', ')})` : ''}.`);
+}
 
 process.exitCode = rows.every((r) => r.verdict === 'ok') ? 0 : 1;

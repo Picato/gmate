@@ -1,5 +1,7 @@
 import {
+  DEFAULT_LANGUAGE,
   DEFAULT_LEVEL,
+  parseLanguage,
   parseLevel,
   parseLocalDay,
   parseRating,
@@ -14,7 +16,7 @@ export interface Storage {
 }
 
 export function defaultState(): AppState {
-  return { level: DEFAULT_LEVEL, completions: [], settings: {} };
+  return { level: DEFAULT_LEVEL, completions: [], settings: { language: DEFAULT_LANGUAGE } };
 }
 
 const isRecord = (raw: unknown): raw is Record<string, unknown> =>
@@ -39,7 +41,10 @@ export function parseAppState(raw: unknown): AppState {
   return {
     level: parseLevel(raw.level) ?? DEFAULT_LEVEL,
     completions: parseCompletions(raw.completions),
-    settings: { reminderTime: parseReminderTime(settings.reminderTime) },
+    settings: {
+      language: parseLanguage(settings.language) ?? DEFAULT_LANGUAGE,
+      reminderTime: parseReminderTime(settings.reminderTime),
+    },
   };
 }
 

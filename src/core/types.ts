@@ -4,6 +4,13 @@ export type Level = (typeof LEVELS)[number];
 export const EXERCISE_KINDS = ['warmup', 'chords', 'rhythm', 'scales', 'lesson'] as const;
 export type ExerciseKind = (typeof EXERCISE_KINDS)[number];
 
+export const LANGUAGES = ['en', 'vi'] as const;
+export type Language = (typeof LANGUAGES)[number];
+export const DEFAULT_LANGUAGE: Language = 'en';
+
+/** A lesson's YouTube ids by language; a missing language means no verified video yet. */
+export type VideoIds = { readonly [L in Language]?: string | undefined };
+
 declare const localDayBrand: unique symbol;
 /** A calendar day in the user's local zone, 'YYYY-MM-DD'. Minted only by parseLocalDay and localDay. */
 export type LocalDay = string & { readonly [localDayBrand]: true };
@@ -20,11 +27,11 @@ type ExerciseBase = {
   readonly title: string;
 };
 
-// Only lessons embed video, so a non-lesson cannot carry a videoId.
+// Only lessons embed video, so a non-lesson cannot carry videoIds.
 export type Exercise = ExerciseBase &
   (
-    | { readonly kind: 'lesson'; readonly videoId?: string | undefined }
-    | { readonly kind: Exclude<ExerciseKind, 'lesson'>; readonly videoId?: never }
+    | { readonly kind: 'lesson'; readonly videoIds?: VideoIds }
+    | { readonly kind: Exclude<ExerciseKind, 'lesson'>; readonly videoIds?: never }
   );
 
 export type SessionPlan = {
@@ -44,6 +51,7 @@ export type Completion = {
 };
 
 export type Settings = {
+  readonly language: Language;
   readonly reminderTime?: ReminderTime | undefined;
 };
 
@@ -57,6 +65,10 @@ export const DEFAULT_LEVEL: Level = 3;
 
 export function parseLevel(raw: unknown): Level | undefined {
   return LEVELS.find((level) => level === raw);
+}
+
+export function parseLanguage(raw: unknown): Language | undefined {
+  return LANGUAGES.find((language) => language === raw);
 }
 
 export function parseRating(raw: unknown): Rating | undefined {

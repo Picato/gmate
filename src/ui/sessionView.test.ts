@@ -46,23 +46,25 @@ describe('sessionView', () => {
     expect(after.items).toEqual(before.items);
   });
 
-  it('embeds a nocookie player for a lesson with a videoId and nothing for other items', () => {
+  it('embeds a nocookie player for a lesson with a video id and nothing for other items', () => {
     const lesson: Exercise = {
-      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', videoId: 'abc_123',
+      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', videoIds: { en: 'abc_123' },
     };
     const view = sessionView(defaultState(), today, [lesson]);
     expect(view.items).toHaveLength(1);
     expect(view.items[0]?.media).toEqual({
       type: 'video',
       embedUrl: 'https://www.youtube-nocookie.com/embed/abc_123',
+      language: 'en',
+      fellBack: false,
     });
     const mixed = sessionView(defaultState(), today, CATALOG);
     expect(mixed.items.filter((i) => i.kind !== 'lesson').every((i) => i.media === undefined)).toBe(true);
   });
 
-  it('gives a lesson without a videoId a message and a search link instead of a player', () => {
+  it('gives a lesson without a video id a message and a search link instead of a player', () => {
     const lesson: Exercise = {
-      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'Blues & bends', videoId: undefined,
+      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'Blues & bends', videoIds: {},
     };
     const media = sessionView(defaultState(), today, [lesson]).items[0]?.media;
     expect(media?.type).toBe('link');
@@ -74,9 +76,9 @@ describe('sessionView', () => {
     }
   });
 
-  it('percent-encodes a hostile videoId so it cannot break out of the URL', () => {
+  it('percent-encodes a hostile video id so it cannot break out of the URL', () => {
     const lesson: Exercise = {
-      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', videoId: 'x"?y=1/../',
+      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', videoIds: { en: 'x"?y=1/../' },
     };
     const media = sessionView(defaultState(), today, [lesson]).items[0]?.media;
     expect(media?.type === 'video' && media.embedUrl.includes('"')).toBe(false);

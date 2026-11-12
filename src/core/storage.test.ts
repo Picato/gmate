@@ -28,7 +28,7 @@ const sample: AppState = {
     { date: day('2026-03-01'), level: 3 },
     { date: day('2026-03-02'), level: 4 },
   ],
-  settings: { reminderTime: parseReminderTime('07:30') },
+  settings: { language: 'vi', reminderTime: parseReminderTime('07:30') },
 };
 
 const implementations: [string, () => Storage][] = [
@@ -79,6 +79,22 @@ describe('LocalStorage on bad data', () => {
       ['2026-03-02', 5],
     ]);
     expect(state.settings.reminderTime).toBeUndefined();
+  });
+});
+
+describe('language setting', () => {
+  const load = (settings: unknown) =>
+    new LocalStorage(fakeStore({ [STORAGE_KEY]: JSON.stringify({ level: 3, completions: [], settings }) })).load();
+
+  it('defaults to English for new and old data lacking it', () => {
+    expect(new LocalStorage(fakeStore()).load().settings.language).toBe('en');
+    expect(load({ reminderTime: '07:30' }).settings.language).toBe('en');
+  });
+
+  it('falls back to English for junk and keeps a valid choice', () => {
+    expect(load({ language: 'fr' }).settings.language).toBe('en');
+    expect(load({ language: 42 }).settings.language).toBe('en');
+    expect(load({ language: 'vi' }).settings.language).toBe('vi');
   });
 });
 

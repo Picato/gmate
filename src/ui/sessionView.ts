@@ -1,12 +1,24 @@
 import { dayIndexFor } from '../core/dayIndex.ts';
 import { nextLevel, type RatedSession } from '../core/adapt.ts';
 import { planFor } from '../core/plan.ts';
+import { videoFor } from '../core/video.ts';
 import { currentStreak, longestStreak } from '../core/streak.ts';
-import type { AppState, Completion, Exercise, ExerciseKind, Level, LocalDay, Rating } from '../core/types.ts';
+import type { AppState, Completion, Exercise, ExerciseKind, Language, Level, LocalDay, Rating } from '../core/types.ts';
 
 export type LessonMedia =
-  | { readonly type: 'video'; readonly embedUrl: string }
-  | { readonly type: 'link'; readonly message: string; readonly href: string };
+  | {
+      readonly type: 'video';
+      readonly embedUrl: string;
+      readonly language: Language;
+      readonly fellBack: boolean;
+    }
+  | {
+      readonly type: 'link';
+      readonly message: string;
+      readonly href: string;
+      readonly language: Language;
+      readonly fellBack: false;
+    };
 
 export type ItemView = {
   readonly id: string;
@@ -29,18 +41,23 @@ export type SessionView = {
 
 const minutesLabel = (minutes: number) => `${minutes} min`;
 
-function mediaFor(exercise: Exercise): LessonMedia | undefined {
+function mediaFor(exercise: Exercise, requested: Language): LessonMedia | undefined {
   if (exercise.kind !== 'lesson') return undefined;
-  if (exercise.videoId) {
+  const { videoId, language, fellBack } = videoFor(exercise, requested);
+  if (videoId) {
     return {
       type: 'video',
-      embedUrl: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(exercise.videoId)}`,
+      embedUrl: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`,
+      language,
+      fellBack,
     };
   }
   return {
     type: 'link',
     message: 'No embedded video for this lesson yet. Find one on YouTube.',
     href: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${exercise.title} guitar lesson`)}`,
+    language,
+    fellBack: false,
   };
 }
 
@@ -60,7 +77,7 @@ export function sessionView(
       kind: item.kind,
       title: item.title,
       minutesLabel: minutesLabel(item.minutes),
-      media: mediaFor(item),
+      media: mediaFor(item, state.settings.language),
     })),
     totalMinutes: plan.totalMinutes,
     totalLabel: `Total ${minutesLabel(plan.totalMinutes)}`,

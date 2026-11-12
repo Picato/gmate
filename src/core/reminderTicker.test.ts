@@ -16,7 +16,7 @@ function harness(opts: { time?: string; done?: boolean; granted?: boolean; at: D
   const state: AppState = {
     ...defaultState(),
     completions: opts.done ? [{ date: day('2026-06-10'), level: 3 }] : [],
-    settings: { reminderTime: parseReminderTime(opts.time) },
+    settings: { language: 'en', reminderTime: parseReminderTime(opts.time) },
   };
   const ports: ReminderPorts = {
     now: () => clock.now,

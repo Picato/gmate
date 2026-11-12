@@ -1,4 +1,4 @@
-import type { Exercise, ExerciseKind, Level } from '../core/types.ts';
+import type { Exercise, ExerciseKind, Level, VideoIds } from '../core/types.ts';
 
 type LevelRange = readonly [min: Level, max: Level];
 
@@ -17,9 +17,9 @@ function lesson(
   minutes: number,
   [minLevel, maxLevel]: LevelRange,
   title: string,
-  videoId: string | undefined,
+  videoIds: VideoIds,
 ): Exercise {
-  return { kind: 'lesson', id, minutes, minLevel, maxLevel, title, videoId };
+  return { kind: 'lesson', id, minutes, minLevel, maxLevel, title, videoIds };
 }
 
 // Bands: beginner 1-2, intermediate 3 (densest, the default level), advanced 4-5.
@@ -66,16 +66,16 @@ export const CATALOG: readonly Exercise[] = [
   practice('scales', 'scale-intermediate-blues', 10, [3, 3], 'Blues scale with the blue note'),
   practice('scales', 'scale-modes', 10, [4, 5], 'Dorian and mixolydian modes'),
 
-  // A lesson without a verified videoId stays undefined; scripts/check-catalog.mjs validates every id.
-  lesson('lesson-andy-beginner-1', 10, [1, 2], 'Andy Guitar beginner lesson 1', 'BBz-Jyr23M4'),
-  lesson('lesson-first-riff', 10, [1, 2], 'Your first riff', '5rcCiXqAShY'),
-  lesson('lesson-three-chord-song', 12, [1, 3], 'A three-chord song', 'ylgPrXISIuM'),
-  lesson('lesson-campfire', 12, [2, 4], 'Campfire strumming song', 'ix9z6CLgc5w'),
-  lesson('lesson-fingerpicking-song', 12, [3, 4], 'A fingerpicking song', 'WKprmyDGs7M'),
-  lesson('lesson-blues', 10, [3, 5], '12-bar blues in A', 'rLm99QI8eWs'),
-  lesson('lesson-improv', 10, [3, 5], 'Pentatonic improvisation over a backing track', 'pQhbePL8h48'),
-  lesson('lesson-solo-intro', 12, [3, 5], 'Learn a classic solo intro', '0RybdmubxzY'),
-  lesson('lesson-intermediate-bends', 10, [3, 3], 'String bends and vibrato', 'ck2uxWh4qvo'),
-  lesson('lesson-advanced-song', 15, [4, 5], 'An advanced full-song study', 'TeMRmFYcWYc'),
-  lesson('lesson-jazz-standard', 15, [4, 5], 'A jazz standard, chord melody', '57mItDzMeM8'),
+  // A language missing from videoIds has no verified video; scripts/check-catalog.mjs validates every id.
+  lesson('lesson-andy-beginner-1', 10, [1, 2], 'Andy Guitar beginner lesson 1', { en: 'BBz-Jyr23M4' }),
+  lesson('lesson-first-riff', 10, [1, 2], 'Your first riff', { en: '5rcCiXqAShY' }),
+  lesson('lesson-three-chord-song', 12, [1, 3], 'A three-chord song', { en: 'ylgPrXISIuM' }),
+  lesson('lesson-campfire', 12, [2, 4], 'Campfire strumming song', { en: 'ix9z6CLgc5w' }),
+  lesson('lesson-fingerpicking-song', 12, [3, 4], 'A fingerpicking song', { en: 'WKprmyDGs7M' }),
+  lesson('lesson-blues', 10, [3, 5], '12-bar blues in A', { en: 'rLm99QI8eWs' }),
+  lesson('lesson-improv', 10, [3, 5], 'Pentatonic improvisation over a backing track', { en: 'pQhbePL8h48' }),
+  lesson('lesson-solo-intro', 12, [3, 5], 'Learn a classic solo intro', { en: '0RybdmubxzY' }),
+  lesson('lesson-intermediate-bends', 10, [3, 3], 'String bends and vibrato', { en: 'ck2uxWh4qvo' }),
+  lesson('lesson-advanced-song', 15, [4, 5], 'An advanced full-song study', { en: 'TeMRmFYcWYc' }),
+  lesson('lesson-jazz-standard', 15, [4, 5], 'A jazz standard, chord melody', { en: '57mItDzMeM8' }),
 ];
