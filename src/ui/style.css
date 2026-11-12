@@ -22,3 +22,6 @@ body { margin: 0; }
 .history { display: flex; gap: 4px; list-style: none; padding: 0; }
 .day { width: 1.4rem; height: 1.4rem; border-radius: 4px; background: rgba(128, 128, 128, 0.25); }
 .day.done { background: #2e7d32; }
+#banner { padding: 0.6rem 0.9rem; border-radius: 6px; background: #fff3cd; color: #5c4400; }
+#banner[hidden] { display: none; }
+#reminder { margin-top: 2rem; }

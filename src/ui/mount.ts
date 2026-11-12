@@ -1,11 +1,11 @@
 import type { Storage } from '../core/storage.ts';
-import type { Exercise, LocalDay } from '../core/types.ts';
+import type { Exercise } from '../core/types.ts';
+import { localDay } from '../core/streak.ts';
 import { el } from './dom.ts';
+import { createReminderPanel } from './reminderPanel.ts';
 import { progressView } from './progressView.ts';
 import { createProgressPanel } from './progressPanel.ts';
 import { levelChangeMessage, markDone, RATING_CHOICES, sessionView, type ItemView, type SessionView } from './sessionView.ts';
-
-type Clock = () => LocalDay;
 
 function itemNode(item: ItemView): HTMLLIElement {
   const li = el(
@@ -46,9 +46,9 @@ export function mountSession(
   root: HTMLElement,
   storage: Storage,
   catalog: readonly Exercise[],
-  today: Clock,
+  now: () => Date,
 ): void {
-  const day = today();
+  const day = localDay(now());
   const view = (): SessionView => sessionView(storage.load(), day, catalog);
   const initial = view();
 
@@ -74,6 +74,7 @@ export function mountSession(
   const levelNote = el('p', { id: 'level-change', role: 'status' });
   const status = el('p', { id: 'done-status', role: 'status' });
   const progress = createProgressPanel();
+  const reminder = createReminderPanel(storage, now);
 
   button.addEventListener('click', () => {
     asking = true;
@@ -83,6 +84,7 @@ export function mountSession(
   function update(): void {
     const v = view();
     progress.render(progressView(storage.load(), day));
+    reminder.refresh();
     current.textContent = String(v.currentStreak);
     longest.textContent = String(v.longestStreak);
     button.disabled = v.done;
@@ -95,6 +97,7 @@ export function mountSession(
 
   root.replaceChildren(
     el('h1', {}, 'gmate'),
+    reminder.banner,
     el('p', { className: 'meta' }, `${initial.date} · ${initial.levelLabel}`),
     el('ol', { id: 'plan' }, ...initial.items.map(itemNode)),
     el('p', { id: 'total' }, initial.totalLabel),
@@ -104,6 +107,8 @@ export function mountSession(
     status,
     levelNote,
     progress.node,
+    reminder.node,
   );
   update();
+  reminder.start();
 }
