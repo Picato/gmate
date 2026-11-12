@@ -1,6 +1,8 @@
 import { currentStreak, addDays, longestStreak } from '../core/streak.ts';
 import type { AppState, LocalDay } from '../core/types.ts';
 
+export const dayCount = (n: number): string => `${n} ${n === 1 ? 'day' : 'days'}`;
+
 export const HISTORY_DAYS = 14;
 
 export type DayCell = {
@@ -13,6 +15,8 @@ export type ProgressView = {
   readonly totalSessions: number;
   readonly currentStreak: number;
   readonly longestStreak: number;
+  readonly currentStreakLabel: string;
+  readonly longestStreakLabel: string;
   readonly levelLabel: string;
   /** Oldest first, ending today. */
   readonly days: readonly DayCell[];
@@ -25,10 +29,14 @@ export function progressView(state: AppState, today: LocalDay): ProgressView {
     const isDone = done.has(date);
     return { date, done: isDone, label: `${date} ${isDone ? 'done' : 'missed'}` };
   });
+  const current = currentStreak(state.completions, today);
+  const longest = longestStreak(state.completions);
   return {
     totalSessions: done.size,
-    currentStreak: currentStreak(state.completions, today),
-    longestStreak: longestStreak(state.completions),
+    currentStreak: current,
+    longestStreak: longest,
+    currentStreakLabel: dayCount(current),
+    longestStreakLabel: dayCount(longest),
     levelLabel: `Level ${state.level} of 5`,
     days,
   };

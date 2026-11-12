@@ -27,8 +27,8 @@ export function createProgressPanel(): { node: HTMLElement; render: (view: Progr
     render(view) {
       const rows: [string, string][] = [
         ['Total sessions', String(view.totalSessions)],
-        ['Current streak', `${view.currentStreak} days`],
-        ['Longest streak', `${view.longestStreak} days`],
+        ['Current streak', view.currentStreakLabel],
+        ['Longest streak', view.longestStreakLabel],
         ['Level', view.levelLabel],
       ];
       stats.replaceChildren(

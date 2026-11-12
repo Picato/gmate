@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { defaultState } from '../core/storage.ts';
 import { parseLocalDay, type AppState, type LocalDay } from '../core/types.ts';
-import { progressView } from './progressView.ts';
+import { dayCount, progressView } from './progressView.ts';
 
 const day = (s: string): LocalDay => {
   const parsed = parseLocalDay(s);
@@ -47,5 +47,18 @@ describe('progressView', () => {
     expect(days.map((d) => d.date)).toContain('2026-03-08');
     expect(new Set(days.map((d) => d.date)).size).toBe(14);
     expect(days[0]?.date).toBe('2026-02-24');
+  });
+
+  it('labels streaks with a singular day for one', () => {
+    const one = progressView(stateWith(3, '2026-06-10'), today);
+    expect(one).toMatchObject({ currentStreakLabel: '1 day', longestStreakLabel: '1 day' });
+    const none = progressView(defaultState(), today);
+    expect(none).toMatchObject({ currentStreakLabel: '0 days', longestStreakLabel: '0 days' });
+  });
+});
+
+describe('dayCount', () => {
+  it('pluralises every count except one', () => {
+    expect([0, 1, 2, 11, 100].map(dayCount)).toEqual(['0 days', '1 day', '2 days', '11 days', '100 days']);
   });
 });
