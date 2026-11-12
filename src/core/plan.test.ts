@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { CATALOG } from '../data/catalog.ts';
 import { planFor } from './plan.ts';
-import { EXERCISE_KINDS, LEVELS, type Exercise, type Language } from './types.ts';
+import { EXERCISE_KINDS, LANGUAGES, LEVELS, type Exercise, type Language } from './types.ts';
 
 const DAYS = Array.from({ length: 61 }, (_, i) => i);
 const levelDayPairs = LEVELS.flatMap((level) => DAYS.map((day) => [level, day] as const));
@@ -105,8 +105,14 @@ describe('seeded catalog', () => {
   const videoLessonsAt = (language: Language, level: number) =>
     CATALOG.filter((e) => e.videoIds?.[language] && e.minLevel <= level && level <= e.maxLevel);
 
-  it('has en video lessons at every level and at least 3 in each of levels 2 to 4', () => {
-    for (const level of LEVELS) expect(videoLessonsAt('en', level).length).toBeGreaterThan(0);
-    for (const level of [2, 3, 4]) expect(videoLessonsAt('en', level).length).toBeGreaterThanOrEqual(3);
+  it.each(LANGUAGES)('has %s video lessons at every level and at least 3 in each of levels 2 to 4', (language) => {
+    for (const level of LEVELS) expect(videoLessonsAt(language, level).length).toBeGreaterThan(0);
+    for (const level of [2, 3, 4]) expect(videoLessonsAt(language, level).length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('has a vi video for every level 3 lesson', () => {
+    const level3Lessons = CATALOG.filter((e) => e.kind === 'lesson' && e.minLevel <= 3 && 3 <= e.maxLevel);
+    expect(level3Lessons.length).toBeGreaterThan(0);
+    for (const e of level3Lessons) expect(e.videoIds?.vi, e.id).toBeDefined();
   });
 });
