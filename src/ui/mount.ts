@@ -149,7 +149,7 @@ export function mountSession(
           current,
           el('span', { className: 'streak-unit' }, ' day streak'),
         ),
-        el('p', { className: 'streak-longest' }, 'Longest ', longest, ' days'),
+        el('p', { className: 'streak-longest' }, 'Longest streak ', longest),
       ),
       el('div', { className: 'actions' }, button, ratingPrompt, status, levelNote),
     ),
