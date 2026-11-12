@@ -11,6 +11,7 @@ export type LessonMedia =
       readonly embedUrl: string;
       readonly language: Language;
       readonly fellBack: boolean;
+      readonly fallbackNote: string | undefined;
     }
   | {
       readonly type: 'link';
@@ -39,10 +40,13 @@ export type SessionView = {
   readonly done: boolean;
 };
 
-export const LANGUAGE_CHOICES: readonly { readonly language: Language; readonly label: string}[] = [
-  { language: 'en', label: 'English' },
-  { language: 'vi', label: 'Tiếng Việt' },
+export const LANGUAGE_CHOICES: readonly { readonly language: Language; readonly label: string; readonly name: string }[] = [
+  { language: 'en', label: 'English', name: 'English' },
+  { language: 'vi', label: 'Tiếng Việt', name: 'Vietnamese' },
 ];
+
+const languageName = (language: Language): string =>
+  LANGUAGE_CHOICES.find((c) => c.language === language)?.name ?? language;
 
 const minutesLabel = (minutes: number) => `${minutes} min`;
 
@@ -55,6 +59,9 @@ function mediaFor(exercise: Exercise, requested: Language): LessonMedia | undefi
       embedUrl: `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}`,
       language,
       fellBack,
+      fallbackNote: fellBack
+        ? `No ${languageName(requested)} video for this lesson yet, showing ${languageName(language)}`
+        : undefined,
     };
   }
   return {

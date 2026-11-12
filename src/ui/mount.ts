@@ -29,6 +29,7 @@ function mediaNode(media: LessonMedia, title: string): HTMLDivElement {
         loading: 'lazy',
       }),
     );
+    if (media.fallbackNote) area.append(el('p', { className: 'fallback-note', role: 'status' }, media.fallbackNote));
   } else {
     area.append(
       el(

@@ -114,6 +114,17 @@ describe('sessionView language', () => {
     });
   });
 
+  it('words the fallback note for the missing language and the one shown', () => {
+    expect(mediaOf('vi', englishOnly)).toMatchObject({
+      fallbackNote: 'No Vietnamese video for this lesson yet, showing English',
+    });
+  });
+
+  it('has no note when the chosen language is available', () => {
+    expect(mediaOf('vi', both)).toMatchObject({ fallbackNote: undefined });
+    expect(mediaOf('en', englishOnly)).toMatchObject({ fallbackNote: undefined });
+  });
+
   it('plays English for a fresh state', () => {
     expect(sessionView(defaultState(), today, [both]).items[0]?.media).toMatchObject({
       language: 'en', fellBack: false,

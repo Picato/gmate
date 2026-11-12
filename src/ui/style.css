@@ -273,6 +273,12 @@ a {
   background: var(--wood-deep);
 }
 
+.fallback-note {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
 .no-video {
   margin: 0.4rem 0 0;
   color: var(--muted);
