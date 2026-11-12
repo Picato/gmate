@@ -7,10 +7,17 @@ async function check(videoId) {
   const watch = `https://www.youtube.com/watch?v=${videoId}`;
   const url = `https://www.youtube.com/oembed?url=${encodeURIComponent(watch)}&format=json`;
   try {
-    const { status } = await fetch(url);
-    return { videoId, status, verdict: VERDICT[status] ?? 'unexpected' };
+    const res = await fetch(url);
+    const meta = res.status === 200 ? await res.json() : {};
+    return {
+      videoId,
+      status: res.status,
+      verdict: VERDICT[res.status] ?? 'unexpected',
+      title: meta.title ?? '',
+      author: meta.author_name ?? '',
+    };
   } catch (error) {
-    return { videoId, status: '-', verdict: `network error: ${error.message}` };
+    return { videoId, status: '-', verdict: `network error: ${error.message}`, title: '', author: '' };
   }
 }
 
