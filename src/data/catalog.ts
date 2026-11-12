@@ -66,16 +66,16 @@ export const CATALOG: readonly Exercise[] = [
   practice('scales', 'scale-intermediate-blues', 10, [3, 3], 'Blues scale with the blue note'),
   practice('scales', 'scale-modes', 10, [4, 5], 'Dorian and mixolydian modes'),
 
-  // TODO(catalog): replace undefined videoIds with verified IDs; scripts/check-catalog.mjs validates them.
+  // A lesson without a verified videoId stays undefined; scripts/check-catalog.mjs validates every id.
   lesson('lesson-andy-beginner-1', 10, [1, 2], 'Andy Guitar beginner lesson 1', 'BBz-Jyr23M4'),
-  lesson('lesson-first-riff', 10, [1, 2], 'Your first riff', undefined),
-  lesson('lesson-three-chord-song', 12, [1, 3], 'A three-chord song', undefined),
-  lesson('lesson-campfire', 12, [2, 4], 'Campfire strumming song', undefined),
-  lesson('lesson-fingerpicking-song', 12, [3, 4], 'A fingerpicking song', undefined),
-  lesson('lesson-blues', 10, [3, 5], '12-bar blues in A', undefined),
-  lesson('lesson-improv', 10, [3, 5], 'Pentatonic improvisation over a backing track', undefined),
-  lesson('lesson-solo-intro', 12, [3, 5], 'Learn a classic solo intro', undefined),
-  lesson('lesson-intermediate-bends', 10, [3, 3], 'String bends and vibrato', undefined),
-  lesson('lesson-advanced-song', 15, [4, 5], 'An advanced full-song study', undefined),
-  lesson('lesson-jazz-standard', 15, [4, 5], 'A jazz standard, chord melody', undefined),
+  lesson('lesson-first-riff', 10, [1, 2], 'Your first riff', '5rcCiXqAShY'),
+  lesson('lesson-three-chord-song', 12, [1, 3], 'A three-chord song', 'ylgPrXISIuM'),
+  lesson('lesson-campfire', 12, [2, 4], 'Campfire strumming song', 'ix9z6CLgc5w'),
+  lesson('lesson-fingerpicking-song', 12, [3, 4], 'A fingerpicking song', 'WKprmyDGs7M'),
+  lesson('lesson-blues', 10, [3, 5], '12-bar blues in A', 'rLm99QI8eWs'),
+  lesson('lesson-improv', 10, [3, 5], 'Pentatonic improvisation over a backing track', 'pQhbePL8h48'),
+  lesson('lesson-solo-intro', 12, [3, 5], 'Learn a classic solo intro', '0RybdmubxzY'),
+  lesson('lesson-intermediate-bends', 10, [3, 3], 'String bends and vibrato', 'ck2uxWh4qvo'),
+  lesson('lesson-advanced-song', 15, [4, 5], 'An advanced full-song study', 'TeMRmFYcWYc'),
+  lesson('lesson-jazz-standard', 15, [4, 5], 'A jazz standard, chord melody', '57mItDzMeM8'),
 ];
