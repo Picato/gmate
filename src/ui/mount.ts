@@ -112,6 +112,16 @@ function flameIcon(): SVGSVGElement {
   );
 }
 
+// Width and height match the SVG viewBox (321x100) so the header does not shift while the logo loads.
+function logo(): HTMLPictureElement {
+  return el(
+    'picture',
+    {},
+    el('source', { media: '(prefers-color-scheme: dark)', srcset: '/gmate-logo-dark.svg' }),
+    el('img', { src: '/gmate-logo.svg', alt: 'gmate', width: 109, height: 34 }),
+  );
+}
+
 function dateHeading(day: string): string {
   const [year, month, date] = day.split('-').map(Number);
   return new Date(year ?? 0, (month ?? 1) - 1, date ?? 1).toLocaleDateString(undefined, {
@@ -232,7 +242,7 @@ export function mountSession(
     el(
       'header',
       { className: 'masthead' },
-      el('h1', { className: 'wordmark' }, 'gmate'),
+      el('h1', { className: 'wordmark' }, logo()),
       el(
         'p',
         { className: 'meta' },

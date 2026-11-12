@@ -101,15 +101,21 @@ a {
 .masthead {
   display: flex;
   flex-wrap: wrap;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 0.25rem 1rem;
+  gap: 0.5rem 1rem;
   margin-bottom: 1.75rem;
 }
 
 .wordmark {
-  font-size: 1.75rem;
-  letter-spacing: -0.01em;
+  margin: 0;
+  line-height: 0;
+}
+
+.wordmark img {
+  display: block;
+  width: auto;
+  height: 34px;
 }
 
 .meta {
