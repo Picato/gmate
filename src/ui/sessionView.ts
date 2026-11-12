@@ -87,6 +87,12 @@ export function sessionView(
   };
 }
 
+/** Idempotent: choosing the current language returns the same state. */
+export function setLanguage(state: AppState, language: Language): AppState {
+  if (state.settings.language === language) return state;
+  return { ...state, settings: { ...state.settings, language } };
+}
+
 const isRated = (c: Completion): c is RatedSession => c.rating !== undefined;
 
 /** Idempotent: a day already completed returns the same state. The new level applies from the next day. */

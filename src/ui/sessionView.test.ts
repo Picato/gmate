@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import { CATALOG } from '../data/catalog.ts';
 import { defaultState } from '../core/storage.ts';
-import { parseLocalDay, type AppState, type Exercise, type LocalDay, type Rating } from '../core/types.ts';
-import { levelChangeMessage, markDone, sessionView } from './sessionView.ts';
+import { parseLocalDay, parseReminderTime, type AppState, type Exercise, type Language, type LocalDay, type Rating } from '../core/types.ts';
+import { levelChangeMessage, markDone, sessionView, setLanguage } from './sessionView.ts';
 
 const day = (s: string): LocalDay => {
   const parsed = parseLocalDay(s);
@@ -83,6 +83,68 @@ describe('sessionView', () => {
     const media = sessionView(defaultState(), today, [lesson]).items[0]?.media;
     expect(media?.type === 'video' && media.embedUrl.includes('"')).toBe(false);
     expect(media?.type === 'video' && media.embedUrl.split('/embed/')[1]?.includes('/')).toBe(false);
+  });
+});
+
+describe('sessionView language', () => {
+  const both: Exercise = {
+    kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T',
+    videoIds: { en: 'enenenenen1', vi: 'vivivivivi1' },
+  };
+  const englishOnly: Exercise = { ...both, videoIds: { en: 'enenenenen1' } };
+  const inLanguage = (language: Language): AppState => ({ ...defaultState(), settings: { language } });
+  const mediaOf = (language: Language, lesson: Exercise) =>
+    sessionView(inLanguage(language), today, [lesson]).items[0]?.media;
+
+  it('embeds the Vietnamese video when vi is chosen', () => {
+    expect(mediaOf('vi', both)).toMatchObject({
+      type: 'video', embedUrl: expect.stringContaining('vivivivivi1'), language: 'vi', fellBack: false,
+    });
+  });
+
+  it('embeds the English video when en is chosen', () => {
+    expect(mediaOf('en', both)).toMatchObject({
+      type: 'video', embedUrl: expect.stringContaining('enenenenen1'), language: 'en', fellBack: false,
+    });
+  });
+
+  it('shows English and flags the fallback when vi is chosen but missing', () => {
+    expect(mediaOf('vi', englishOnly)).toMatchObject({
+      type: 'video', embedUrl: expect.stringContaining('enenenenen1'), language: 'en', fellBack: true,
+    });
+  });
+
+  it('plays English for a fresh state', () => {
+    expect(sessionView(defaultState(), today, [both]).items[0]?.media).toMatchObject({
+      language: 'en', fellBack: false,
+    });
+  });
+});
+
+describe('setLanguage', () => {
+  it('returns a state with the chosen language and leaves the rest alone', () => {
+    const before: AppState = { ...stateWith('2026-06-09'), level: 4 };
+    const after = setLanguage(before, 'vi');
+    expect(after.settings.language).toBe('vi');
+    expect({ ...after, settings: before.settings }).toEqual(before);
+  });
+
+  it('keeps other settings', () => {
+    const before = { ...defaultState(), settings: { language: 'en', reminderTime: parseReminderTime('07:30') } } as const;
+    expect(setLanguage(before, 'vi').settings.reminderTime).toBe('07:30');
+  });
+
+  it('is idempotent and returns the same state when nothing changes', () => {
+    const vi = setLanguage(defaultState(), 'vi');
+    expect(setLanguage(vi, 'vi')).toBe(vi);
+    expect(setLanguage(defaultState(), 'en')).toEqual(defaultState());
+  });
+
+  it('does not mutate the state it was given', () => {
+    const before = defaultState();
+    const snapshot = structuredClone(before);
+    setLanguage(before, 'vi');
+    expect(before).toEqual(snapshot);
   });
 });
 
