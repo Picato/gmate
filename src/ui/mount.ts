@@ -1,13 +1,87 @@
 import type { Storage } from '../core/storage.ts';
-import type { Exercise } from '../core/types.ts';
+import type { Exercise, Language } from '../core/types.ts';
 import { localDay } from '../core/streak.ts';
 import { el, svg } from './dom.ts';
 import { createReminderPanel } from './reminderPanel.ts';
 import { progressView } from './progressView.ts';
 import { createProgressPanel } from './progressPanel.ts';
-import { levelChangeMessage, markDone, RATING_CHOICES, sessionView, type ItemView, type SessionView } from './sessionView.ts';
+import {
+  LANGUAGE_CHOICES,
+  levelChangeMessage,
+  markDone,
+  RATING_CHOICES,
+  sessionView,
+  setLanguage,
+  type ItemView,
+  type LessonMedia,
+  type SessionView,
+} from './sessionView.ts';
 
-function itemNode(item: ItemView): HTMLLIElement {
+function mediaNode(media: LessonMedia, title: string): HTMLDivElement {
+  const area = el('div', { className: 'lesson-media' });
+  if (media.type === 'video') {
+    area.append(
+      el('iframe', {
+        className: 'player',
+        src: media.embedUrl,
+        title,
+        allowFullscreen: true,
+        loading: 'lazy',
+      }),
+    );
+  } else {
+    area.append(
+      el(
+        'p',
+        { className: 'no-video' },
+        `${media.message} `,
+        el('a', { href: media.href, target: '_blank', rel: 'noopener noreferrer' }, 'Search YouTube'),
+      ),
+    );
+  }
+  return area;
+}
+
+function languageControl(
+  selected: Language,
+  onChoose: (language: Language) => void,
+): { node: HTMLElement; select: (language: Language) => void } {
+  const buttons = LANGUAGE_CHOICES.map(({ language, label }) =>
+    el('button', { type: 'button', className: 'segment', role: 'radio', id: `lang-${language}` }, label),
+  );
+  const group = el('div', { className: 'segments segments-2', role: 'radiogroup', ariaLabel: 'Lesson video language' }, ...buttons);
+
+  function select(language: Language): void {
+    LANGUAGE_CHOICES.forEach((choice, i) => {
+      const on = choice.language === language;
+      const button = buttons[i];
+      if (!button) return;
+      button.ariaChecked = String(on);
+      button.tabIndex = on ? 0 : -1;
+    });
+  }
+
+  buttons.forEach((button, i) => {
+    button.addEventListener('click', () => {
+      const choice = LANGUAGE_CHOICES[i];
+      if (choice) onChoose(choice.language);
+    });
+    button.addEventListener('keydown', (event) => {
+      const step = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 0;
+      if (step === 0) return;
+      event.preventDefault();
+      const nextIndex = (i + step + buttons.length) % buttons.length;
+      buttons[nextIndex]?.focus();
+      buttons[nextIndex]?.click();
+    });
+  });
+  select(selected);
+
+  const node = el('div', { className: 'lesson-language' }, el('span', { className: 'rating-label' }, 'Lesson video language'), group);
+  return { node, select };
+}
+
+function itemNode(item: ItemView, media: HTMLDivElement | undefined): HTMLLIElement {
   const li = el(
     'li',
     { className: `item item-${item.kind}` },
@@ -18,27 +92,7 @@ function itemNode(item: ItemView): HTMLLIElement {
       el('span', { className: 'item-minutes' }, item.minutesLabel),
     ),
   );
-  const { media } = item;
-  if (media?.type === 'video') {
-    li.append(
-      el('iframe', {
-        className: 'player',
-        src: media.embedUrl,
-        title: item.title,
-        allowFullscreen: true,
-        loading: 'lazy',
-      }),
-    );
-  } else if (media?.type === 'link') {
-    li.append(
-      el(
-        'p',
-        { className: 'no-video' },
-        `${media.message} `,
-        el('a', { href: media.href, target: '_blank', rel: 'noopener noreferrer' }, 'Search YouTube'),
-      ),
-    );
-  }
+  if (media) li.append(media);
   return li;
 }
 
@@ -68,7 +122,7 @@ function dateHeading(day: string): string {
 
 /**
  * The plan and its iframe are built once; later renders touch only streak and button,
- * so marking done never restarts the video.
+ * so marking done never restarts the video. Changing language swaps only the media areas.
  */
 export function mountSession(
   root: HTMLElement,
@@ -79,6 +133,23 @@ export function mountSession(
   const day = localDay(now());
   const view = (): SessionView => sessionView(storage.load(), day, catalog);
   const initial = view();
+  const mediaAreas = new Map<string, HTMLDivElement>();
+  const planItems = initial.items.map((item) => {
+    const area = item.media ? mediaNode(item.media, item.title) : undefined;
+    if (area) mediaAreas.set(item.id, area);
+    return itemNode(item, area);
+  });
+  const language = languageControl(storage.load().settings.language, (chosen) => {
+    storage.save(setLanguage(storage.load(), chosen));
+    language.select(chosen);
+    for (const item of view().items) {
+      const old = mediaAreas.get(item.id);
+      if (!old || !item.media) continue;
+      const fresh = mediaNode(item.media, item.title);
+      old.replaceWith(fresh);
+      mediaAreas.set(item.id, fresh);
+    }
+  });
 
   const current = el('strong', { id: 'streak-current' });
   const longest = el('strong', { id: 'streak-longest' });
@@ -135,7 +206,8 @@ export function mountSession(
       el('h2', { id: 'session-title' }, "Today's session"),
       el('p', { id: 'total' }, initial.totalLabel),
     ),
-    el('ol', { id: 'plan' }, ...initial.items.map(itemNode)),
+    language.node,
+    el('ol', { id: 'plan' }, ...planItems),
     el(
       'div',
       { className: 'finish' },

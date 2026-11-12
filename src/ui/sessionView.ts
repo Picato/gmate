@@ -39,6 +39,11 @@ export type SessionView = {
   readonly done: boolean;
 };
 
+export const LANGUAGE_CHOICES: readonly { readonly language: Language; readonly label: string}[] = [
+  { language: 'en', label: 'English' },
+  { language: 'vi', label: 'Tiếng Việt' },
+];
+
 const minutesLabel = (minutes: number) => `${minutes} min`;
 
 function mediaFor(exercise: Exercise, requested: Language): LessonMedia | undefined {

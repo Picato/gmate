@@ -413,6 +413,45 @@ a {
   overflow: hidden;
 }
 
+.lesson-language {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.segments-2 {
+  grid-template-columns: repeat(2, minmax(7rem, 1fr));
+}
+
+.segment {
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border: 0;
+  background: transparent;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.segment + .segment {
+  border-left: 2px solid var(--brass);
+}
+
+.segment:hover {
+  background: var(--accent-soft);
+}
+
+.segment[aria-checked='true'] {
+  background: var(--brass);
+  color: var(--on-brass);
+}
+
+.segment:focus-visible {
+  outline-offset: -5px;
+}
+
 .rating {
   min-height: 3.25rem;
   padding: 0.5rem 0.4rem;
@@ -659,6 +698,10 @@ a {
 
   .session-head h2 {
     font-size: 1.625rem;
+  }
+
+  .lesson-language .segments {
+    width: 100%;
   }
 
   .finish {
