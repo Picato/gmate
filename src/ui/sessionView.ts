@@ -2,7 +2,7 @@ import { dayIndexFor } from '../core/dayIndex.ts';
 import { nextLevel, type RatedSession } from '../core/adapt.ts';
 import { planFor } from '../core/plan.ts';
 import { currentStreak, longestStreak } from '../core/streak.ts';
-import type { AppState, Completion, Exercise, ExerciseKind, LocalDay, Rating } from '../core/types.ts';
+import type { AppState, Completion, Exercise, ExerciseKind, Level, LocalDay, Rating } from '../core/types.ts';
 
 export type LessonMedia =
   | { readonly type: 'video'; readonly embedUrl: string }
@@ -77,4 +77,16 @@ export function markDone(state: AppState, today: LocalDay, rating?: Rating): App
   if (state.completions.some((c) => c.date === today)) return state;
   const completions = [...state.completions, { date: today, level: state.level, rating }];
   return { ...state, completions, level: nextLevel(state.level, completions.filter(isRated)) };
+}
+
+export const RATING_CHOICES: readonly { readonly rating: Rating; readonly label: string }[] = [
+  { rating: 'easy', label: 'Too easy' },
+  { rating: 'right', label: 'About right' },
+  { rating: 'hard', label: 'Too hard' },
+];
+
+export function levelChangeMessage(from: Level, to: Level): string {
+  if (to > from) return `Moving up to level ${to}`;
+  if (to < from) return `Moving down to level ${to}`;
+  return '';
 }

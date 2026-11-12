@@ -1,6 +1,6 @@
 import type { Storage } from '../core/storage.ts';
 import type { Exercise, LocalDay } from '../core/types.ts';
-import { markDone, sessionView, type ItemView, type SessionView } from './sessionView.ts';
+import { levelChangeMessage, markDone, RATING_CHOICES, sessionView, type ItemView, type SessionView } from './sessionView.ts';
 
 type Clock = () => LocalDay;
 
@@ -62,10 +62,27 @@ export function mountSession(
   const current = el('strong', { id: 'streak-current' });
   const longest = el('strong', { id: 'streak-longest' });
   const button = el('button', { id: 'mark-done', type: 'button' });
+  const ratingPrompt = el(
+    'div',
+    { id: 'rating-prompt', hidden: true, role: 'group', ariaLabel: 'How was the session?' },
+    ...RATING_CHOICES.map(({ rating, label }) => {
+      const choice = el('button', { type: 'button', className: 'rating', id: `rate-${rating}` }, label);
+      choice.addEventListener('click', () => {
+        const before = storage.load();
+        const after = markDone(before, day, rating);
+        storage.save(after);
+        levelNote.textContent = levelChangeMessage(before.level, after.level);
+        update();
+      });
+      return choice;
+    }),
+  );
+  let asking = false;
+  const levelNote = el('p', { id: 'level-change', role: 'status' });
   const status = el('p', { id: 'done-status', role: 'status' });
 
   button.addEventListener('click', () => {
-    storage.save(markDone(storage.load(), day));
+    asking = true;
     update();
   });
 
@@ -74,6 +91,8 @@ export function mountSession(
     current.textContent = String(v.currentStreak);
     longest.textContent = String(v.longestStreak);
     button.disabled = v.done;
+    button.hidden = asking && !v.done;
+    ratingPrompt.hidden = !asking || v.done;
     button.textContent = v.done ? 'Session done ✓' : 'Mark session done';
     button.classList.toggle('is-done', v.done);
     status.textContent = v.done ? 'Nice work. See you tomorrow.' : '';
@@ -86,7 +105,9 @@ export function mountSession(
     el('p', { id: 'total' }, initial.totalLabel),
     el('p', { className: 'streaks' }, 'Current streak: ', current, ' days · Longest: ', longest, ' days'),
     button,
+    ratingPrompt,
     status,
+    levelNote,
   );
   update();
 }

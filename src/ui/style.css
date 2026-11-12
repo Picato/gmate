@@ -11,3 +11,7 @@ body { margin: 0; }
 #mark-done { font-size: 1.1rem; padding: 0.7rem 1.4rem; cursor: pointer; }
 #mark-done:disabled { cursor: default; }
 #mark-done.is-done { background: #2e7d32; color: #fff; border-color: #2e7d32; }
+#rating-prompt { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+#rating-prompt[hidden] { display: none; }
+.rating { font-size: 1rem; padding: 0.6rem 1.1rem; cursor: pointer; }
+#level-change { font-weight: 600; }

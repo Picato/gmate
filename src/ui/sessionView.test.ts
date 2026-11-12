@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CATALOG } from '../data/catalog.ts';
 import { defaultState } from '../core/storage.ts';
 import { parseLocalDay, type AppState, type Exercise, type LocalDay, type Rating } from '../core/types.ts';
-import { markDone, sessionView } from './sessionView.ts';
+import { levelChangeMessage, markDone, sessionView } from './sessionView.ts';
 
 const day = (s: string): LocalDay => {
   const parsed = parseLocalDay(s);
@@ -156,5 +156,15 @@ describe('markDone with a rating', () => {
     expect(sessionView(after, today, CATALOG).items).toEqual(before.items);
     expect(sessionView(after, today, CATALOG).levelLabel).toBe('Level 3 of 5');
     expect(sessionView(after, day('2026-06-11'), CATALOG).levelLabel).toBe('Level 4 of 5');
+  });
+});
+
+describe('levelChangeMessage', () => {
+  it.each([
+    [3, 4, 'Moving up to level 4'],
+    [3, 2, 'Moving down to level 2'],
+    [3, 3, ''],
+  ] as const)('from %i to %i says %j', (from, to, message) => {
+    expect(levelChangeMessage(from, to)).toBe(message);
   });
 });
