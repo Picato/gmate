@@ -118,7 +118,7 @@ function logo(): HTMLPictureElement {
     'picture',
     {},
     el('source', { media: '(prefers-color-scheme: dark)', srcset: '/gmate-logo-dark.svg' }),
-    el('img', { src: '/gmate-logo.svg', alt: 'gmate', width: 109, height: 34 }),
+    el('img', { src: '/gmate-logo.svg', alt: 'gmate', width: 116, height: 36 }),
   );
 }
 
