@@ -5,6 +5,8 @@ import { parseLocalDay, parseReminderTime, type AppState, type Exercise, type La
 import { currentSession, levelChangeMessage, markDone, sessionView, setLanguage } from './sessionView.ts';
 import { progressView } from './progressView.ts';
 
+const STUB_GUIDE = { goal: 'g', steps: ['s'], tips: [], check: 'c' };
+
 const day = (s: string): LocalDay => {
   const parsed = parseLocalDay(s);
   if (!parsed) throw new Error(`bad day ${s}`);
@@ -49,7 +51,7 @@ describe('sessionView', () => {
 
   it('embeds a nocookie player for a lesson with a video id and nothing for other items', () => {
     const lesson: Exercise = {
-      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', videoIds: { en: 'abc_123' },
+      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', guide: STUB_GUIDE, videoIds: { en: 'abc_123' },
     };
     const view = sessionView(defaultState(), today, [lesson]);
     expect(view.items).toHaveLength(1);
@@ -65,7 +67,7 @@ describe('sessionView', () => {
 
   it('gives a lesson without a video id a message and a search link instead of a player', () => {
     const lesson: Exercise = {
-      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'Blues & bends', videoIds: {},
+      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'Blues & bends', guide: STUB_GUIDE, videoIds: {},
     };
     const media = sessionView(defaultState(), today, [lesson]).items[0]?.media;
     expect(media?.type).toBe('link');
@@ -79,7 +81,7 @@ describe('sessionView', () => {
 
   it('percent-encodes a hostile video id so it cannot break out of the URL', () => {
     const lesson: Exercise = {
-      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', videoIds: { en: 'x"?y=1/../' },
+      kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', guide: STUB_GUIDE, videoIds: { en: 'x"?y=1/../' },
     };
     const media = sessionView(defaultState(), today, [lesson]).items[0]?.media;
     expect(media?.type === 'video' && media.embedUrl.includes('"')).toBe(false);
@@ -89,7 +91,7 @@ describe('sessionView', () => {
 
 describe('sessionView language', () => {
   const both: Exercise = {
-    kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T',
+    kind: 'lesson', id: 'l', minutes: 30, minLevel: 3, maxLevel: 3, title: 'T', guide: STUB_GUIDE,
     videoIds: { en: 'enenenenen1', vi: 'vivivivivi1' },
   };
   const englishOnly: Exercise = { ...both, videoIds: { en: 'enenenenen1' } };

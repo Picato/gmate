@@ -2,7 +2,7 @@ import { nextLevel, type RatedSession } from '../core/adapt.ts';
 import { planFor } from '../core/plan.ts';
 import { videoFor } from '../core/video.ts';
 import { currentStreak, longestStreak } from '../core/streak.ts';
-import type { AppState, Completion, Exercise, ExerciseKind, Language, Level, LocalDay, Rating } from '../core/types.ts';
+import type { AppState, Completion, Exercise, ExerciseKind, Guide, Language, Level, LocalDay, Rating } from '../core/types.ts';
 
 export type LessonMedia =
   | {
@@ -25,6 +25,7 @@ export type ItemView = {
   readonly kind: ExerciseKind;
   readonly title: string;
   readonly minutesLabel: string;
+  readonly guide: Guide;
   readonly media: LessonMedia | undefined;
 };
 
@@ -108,6 +109,7 @@ export function sessionView(
       kind: item.kind,
       title: item.title,
       minutesLabel: minutesLabel(item.minutes),
+      guide: item.guide,
       media: mediaFor(item, state.settings.language),
     })),
     totalMinutes: plan.totalMinutes,

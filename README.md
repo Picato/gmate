@@ -71,6 +71,17 @@ To build a session the planner:
 
 The plan depends only on the level, the session number and the catalog, so it is the same every time you reload.
 
+### What each exercise teaches
+
+Every exercise in the catalog carries a **guide**, shown under its title as "How to practise":
+
+- **Goal:** what you will be able to do afterwards.
+- **Steps:** ordered instructions, with fret numbers, finger numbers and tempos where they apply.
+- **Tips:** common mistakes and technique cues.
+- **You have it when:** a concrete check, so you know whether to move on.
+
+The guide is a required field in the catalog's type, and `src/data/catalog.test.ts` fails if an exercise has no goal, fewer than 3 steps, no tip or no check.
+
 ### What it does not do yet
 
 The pick is by rotation, not by memory. gmate does not record which exercises you have already done, so once a pool is used up an exercise can come round again. Preferring exercises you have not seen is a natural next step.

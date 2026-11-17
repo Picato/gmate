@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 import type { Exercise, VideoIds } from './types.ts';
 import { videoFor } from './video.ts';
 
+const STUB_GUIDE = { goal: 'g', steps: ['s'], tips: [], check: 'c' };
+
 const lesson = (videoIds: VideoIds): Exercise => ({
-  kind: 'lesson', id: 'l', minutes: 10, minLevel: 1, maxLevel: 5, title: 'T', videoIds,
+  kind: 'lesson', id: 'l', minutes: 10, minLevel: 1, maxLevel: 5, title: 'T', guide: STUB_GUIDE, videoIds,
 });
 
 describe('videoFor', () => {

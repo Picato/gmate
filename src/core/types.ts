@@ -19,12 +19,25 @@ declare const reminderTimeBrand: unique symbol;
 /** 'HH:MM', 24-hour. */
 export type ReminderTime = string & { readonly [reminderTimeBrand]: true };
 
+/** What to do in an exercise, so a title is never all the learner gets. */
+export type Guide = {
+  /** What you will be able to do. */
+  readonly goal: string;
+  /** Ordered instructions. */
+  readonly steps: readonly string[];
+  /** Common mistakes and cues. */
+  readonly tips: readonly string[];
+  /** How to tell you have it. */
+  readonly check: string;
+};
+
 type ExerciseBase = {
   readonly id: string;
   readonly minutes: number;
   readonly minLevel: Level;
   readonly maxLevel: Level;
   readonly title: string;
+  readonly guide: Guide;
 };
 
 // Only lessons embed video, so a non-lesson cannot carry videoIds.

@@ -1,5 +1,5 @@
 import type { Storage } from '../core/storage.ts';
-import type { Exercise, Language } from '../core/types.ts';
+import type { Exercise, Guide, Language } from '../core/types.ts';
 import { localDay } from '../core/streak.ts';
 import { el, svg } from './dom.ts';
 import { createReminderPanel } from './reminderPanel.ts';
@@ -83,6 +83,20 @@ function languageControl(
   return { node, select };
 }
 
+function guideNode(guide: Guide): HTMLDetailsElement {
+  return el(
+    'details',
+    { className: 'guide', open: true },
+    el('summary', {}, 'How to practise'),
+    el('p', { className: 'guide-goal' }, el('strong', {}, 'Goal: '), guide.goal),
+    el('ol', { className: 'guide-steps' }, ...guide.steps.map((step) => el('li', {}, step))),
+    guide.tips.length > 0
+      ? el('ul', { className: 'guide-tips' }, ...guide.tips.map((tip) => el('li', {}, tip)))
+      : '',
+    el('p', { className: 'guide-check' }, el('strong', {}, 'You have it when: '), guide.check),
+  );
+}
+
 function itemNode(item: ItemView, media: HTMLDivElement | undefined): HTMLLIElement {
   const li = el(
     'li',
@@ -95,6 +109,7 @@ function itemNode(item: ItemView, media: HTMLDivElement | undefined): HTMLLIElem
     ),
   );
   if (media) li.append(media);
+  li.append(guideNode(item.guide));
   return li;
 }
 
