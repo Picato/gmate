@@ -4,3 +4,5 @@ todo.md
 .DS_Store
 .gstack/
 .claude/worktrees/
+.wrangler/
+.dev.vars

@@ -1,0 +1,13 @@
+{
+  "name": "gmate",
+  "main": "worker/index.ts",
+  "compatibility_date": "2026-11-01",
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    // The Worker checks the login cookie before serving any file.
+    "run_worker_first": true
+  },
+  // No id: `wrangler deploy` creates and binds the namespace on first deploy.
+  "kv_namespaces": [{ "binding": "STATE" }]
+}

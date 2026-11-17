@@ -46,6 +46,8 @@ export type Rating = (typeof RATINGS)[number];
 
 export type Completion = {
   readonly date: LocalDay;
+  /** 1-based order within its day; a day can hold several sessions. */
+  readonly session: number;
   readonly level: Level;
   readonly rating?: Rating | undefined;
 };

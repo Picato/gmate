@@ -1,4 +1,3 @@
-import { dayIndexFor } from '../core/dayIndex.ts';
 import { nextLevel, type RatedSession } from '../core/adapt.ts';
 import { planFor } from '../core/plan.ts';
 import { videoFor } from '../core/video.ts';
@@ -31,6 +30,9 @@ export type ItemView = {
 
 export type SessionView = {
   readonly date: LocalDay;
+  /** Which of today's sessions this is, from 1. */
+  readonly session: number;
+  readonly title: string;
   readonly levelLabel: string;
   readonly items: readonly ItemView[];
   readonly totalMinutes: number;
@@ -73,16 +75,33 @@ function mediaFor(exercise: Exercise, requested: Language): LessonMedia | undefi
   };
 }
 
+const sessionsOn = (state: AppState, day: LocalDay): readonly Completion[] =>
+  state.completions.filter((c) => c.date === day);
+
+/** The session to show on load: the latest one finished today, else the first. */
+export function currentSession(state: AppState, today: LocalDay): number {
+  return Math.max(1, sessionsOn(state, today).length);
+}
+
+/**
+ * A finished session replays its own plan and level. The one after it is planned at the
+ * current level, which the ratings so far have adjusted, and rotates by how many sessions
+ * have been finished in total, so each session brings new material.
+ */
 export function sessionView(
   state: AppState,
   today: LocalDay,
   catalog: readonly Exercise[],
+  session = 1,
 ): SessionView {
-  const completedToday = state.completions.find((c) => c.date === today);
-  const level = completedToday?.level ?? state.level;
-  const plan = planFor(level, dayIndexFor(today, state.completions), catalog, undefined, today);
+  const completed = sessionsOn(state, today)[session - 1];
+  const level = completed?.level ?? state.level;
+  const sessionIndex = completed ? state.completions.indexOf(completed) : state.completions.length;
+  const plan = planFor(level, sessionIndex, catalog, undefined, today);
   return {
     date: today,
+    session,
+    title: session === 1 ? "Today's session" : `Session ${session} today`,
     levelLabel: `Level ${plan.level} of 5`,
     items: plan.items.map((item) => ({
       id: item.id,
@@ -95,7 +114,7 @@ export function sessionView(
     totalLabel: `Total ${minutesLabel(plan.totalMinutes)}`,
     currentStreak: currentStreak(state.completions, today),
     longestStreak: longestStreak(state.completions),
-    done: completedToday !== undefined,
+    done: completed !== undefined,
   };
 }
 
@@ -105,12 +124,15 @@ export function setLanguage(state: AppState, language: Language): AppState {
   return { ...state, settings: { ...state.settings, language } };
 }
 
-const isRated = (c: Completion): c is RatedSession => c.rating !== undefined;
+const isRated = (c: Completion): c is Completion & RatedSession => c.rating !== undefined;
 
-/** Idempotent: a day already completed returns the same state. The new level applies from the next day. */
-export function markDone(state: AppState, today: LocalDay, rating?: Rating): AppState {
-  if (state.completions.some((c) => c.date === today)) return state;
-  const completions = [...state.completions, { date: today, level: state.level, rating }];
+/**
+ * Idempotent: only today's next unfinished session can be recorded, so repeating a call
+ * (double tap, stale tab) returns the same state. The new level applies to the next session.
+ */
+export function markDone(state: AppState, today: LocalDay, session: number, rating?: Rating): AppState {
+  if (session !== sessionsOn(state, today).length + 1) return state;
+  const completions = [...state.completions, { date: today, session, level: state.level, rating }];
   return { ...state, completions, level: nextLevel(state.level, completions.filter(isRated)) };
 }
 

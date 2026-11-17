@@ -6,6 +6,7 @@ import { createReminderPanel } from './reminderPanel.ts';
 import { progressView } from './progressView.ts';
 import { createProgressPanel } from './progressPanel.ts';
 import {
+  currentSession,
   LANGUAGE_CHOICES,
   levelChangeMessage,
   markDone,
@@ -132,8 +133,9 @@ function dateHeading(day: string): string {
 }
 
 /**
- * The plan and its iframe are built once; later renders touch only streak and button,
- * so marking done never restarts the video. Changing language swaps only the media areas.
+ * A session's plan and iframes are built once; later renders touch only streak and button,
+ * so marking done never restarts the video. Changing language swaps only the media areas,
+ * and "Next session" is the only thing that replaces the plan.
  */
 export function mountSession(
   root: HTMLElement,
@@ -142,14 +144,22 @@ export function mountSession(
   now: () => Date,
 ): void {
   const day = localDay(now());
-  const view = (): SessionView => sessionView(storage.load(), day, catalog);
+  let sessionNumber = currentSession(storage.load(), day);
+  const view = (): SessionView => sessionView(storage.load(), day, catalog, sessionNumber);
   const initial = view();
   const mediaAreas = new Map<string, HTMLDivElement>();
-  const planItems = initial.items.map((item) => {
-    const area = item.media ? mediaNode(item.media, item.title) : undefined;
-    if (area) mediaAreas.set(item.id, area);
-    return itemNode(item, area);
-  });
+  const plan = el('ol', { id: 'plan' });
+  function buildPlan(items: SessionView['items']): void {
+    mediaAreas.clear();
+    plan.replaceChildren(
+      ...items.map((item) => {
+        const area = item.media ? mediaNode(item.media, item.title) : undefined;
+        if (area) mediaAreas.set(item.id, area);
+        return itemNode(item, area);
+      }),
+    );
+  }
+  buildPlan(initial.items);
   const language = languageControl(storage.load().settings.language, (chosen) => {
     storage.save(setLanguage(storage.load(), chosen));
     language.select(chosen);
@@ -173,7 +183,7 @@ export function mountSession(
       const choice = el('button', { type: 'button', className: 'rating', id: `rate-${rating}` }, label);
       choice.addEventListener('click', () => {
         const before = storage.load();
-        const after = markDone(before, day, rating);
+        const after = markDone(before, day, sessionNumber, rating);
         storage.save(after);
         levelNote.textContent = levelChangeMessage(before.level, after.level);
         update();
@@ -183,6 +193,10 @@ export function mountSession(
   );
   let asking = false;
   const levelNote = el('p', { id: 'level-change', role: 'status' });
+  const nextButton = el('button', { id: 'next-session', type: 'button', hidden: true }, 'Next session →');
+  const title = el('h2', { id: 'session-title' });
+  const total = el('p', { id: 'total' });
+  const levelLabel = el('span', { className: 'level' });
   const status = el('p', { id: 'done-status', role: 'status' });
   const progress = createProgressPanel();
   const reminder = createReminderPanel(storage, now);
@@ -192,8 +206,20 @@ export function mountSession(
     update();
   });
 
+  nextButton.addEventListener('click', () => {
+    sessionNumber += 1;
+    asking = false;
+    levelNote.textContent = '';
+    buildPlan(view().items);
+    update();
+  });
+
   function update(): void {
     const v = view();
+    title.textContent = v.title;
+    total.textContent = v.totalLabel;
+    levelLabel.textContent = v.levelLabel;
+    nextButton.hidden = !v.done;
     progress.render(progressView(storage.load(), day));
     reminder.refresh();
     current.textContent = String(v.currentStreak);
@@ -205,7 +231,7 @@ export function mountSession(
     button.classList.toggle('is-done', v.done);
     session.classList.toggle('is-done', v.done);
     session.classList.toggle('has-streak', v.currentStreak > 0);
-    status.textContent = v.done ? 'Nice work. See you tomorrow.' : '';
+    status.textContent = v.done ? 'Nice work. Ready for another?' : '';
   }
 
   const session = el(
@@ -214,11 +240,11 @@ export function mountSession(
     el(
       'header',
       { className: 'session-head' },
-      el('h2', { id: 'session-title' }, "Today's session"),
-      el('p', { id: 'total' }, initial.totalLabel),
+      title,
+      total,
     ),
     language.node,
-    el('ol', { id: 'plan' }, ...planItems),
+    plan,
     el(
       'div',
       { className: 'finish' },
@@ -234,7 +260,7 @@ export function mountSession(
         ),
         el('p', { className: 'streak-longest' }, 'Longest streak ', longest),
       ),
-      el('div', { className: 'actions' }, button, ratingPrompt, status, levelNote),
+      el('div', { className: 'actions' }, button, ratingPrompt, status, levelNote, nextButton),
     ),
   );
 
@@ -247,7 +273,7 @@ export function mountSession(
         'p',
         { className: 'meta' },
         el('time', { dateTime: initial.date }, dateHeading(initial.date)),
-        el('span', { className: 'level' }, initial.levelLabel),
+        levelLabel,
       ),
     ),
     reminder.banner,

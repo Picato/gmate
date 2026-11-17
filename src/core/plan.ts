@@ -3,7 +3,7 @@ import type { Exercise, ExerciseKind, Level, LocalDay, SessionPlan } from './typ
 
 export const DEFAULT_BUDGET = 30;
 
-// One kind per slot; the rotation start shifts by dayIndex so the opener changes daily.
+// One kind per slot; the rotation start shifts by sessionIndex so the opener changes every session.
 const ROTATION: readonly ExerciseKind[] = ['warmup', 'chords', 'rhythm', 'lesson'];
 
 // Kind that absorbs leftover minutes when the picks fall short of the budget.
@@ -16,10 +16,10 @@ function pickFor(
   catalog: readonly Exercise[],
   kind: ExerciseKind,
   level: Level,
-  dayIndex: number,
+  sessionIndex: number,
 ): Exercise | undefined {
   const pool = eligible(catalog, kind, level);
-  return pool[dayIndex % pool.length];
+  return pool[sessionIndex % pool.length];
 }
 
 const withMinutes = (exercise: Exercise, minutes: number): Exercise => ({ ...exercise, minutes });
@@ -49,18 +49,18 @@ function fitToBudget(
 
 export function planFor(
   level: Level,
-  dayIndex: number,
+  sessionIndex: number,
   catalog: readonly Exercise[],
   budget: number = DEFAULT_BUDGET,
   date: LocalDay = localDay(new Date()),
 ): SessionPlan {
-  if (!Number.isInteger(dayIndex) || dayIndex < 0) throw new RangeError(`bad dayIndex ${dayIndex}`);
+  if (!Number.isInteger(sessionIndex) || sessionIndex < 0) throw new RangeError(`bad sessionIndex ${sessionIndex}`);
   if (!Number.isInteger(budget) || budget <= 0) throw new RangeError(`bad budget ${budget}`);
 
-  const picks = ROTATION.map((_, slot) => ROTATION[(dayIndex + slot) % ROTATION.length])
-    .map((kind) => pickFor(catalog, kind!, level, dayIndex))
+  const picks = ROTATION.map((_, slot) => ROTATION[(sessionIndex + slot) % ROTATION.length])
+    .map((kind) => pickFor(catalog, kind!, level, sessionIndex))
     .filter((pick): pick is Exercise => pick !== undefined);
-  const items = fitToBudget(picks, pickFor(catalog, FILLER_KIND, level, dayIndex), budget);
+  const items = fitToBudget(picks, pickFor(catalog, FILLER_KIND, level, sessionIndex), budget);
   if (items.length === 0) throw new RangeError(`no catalog entries eligible at level ${level}`);
 
   const totalMinutes = items.reduce((sum, item) => sum + item.minutes, 0);

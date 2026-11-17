@@ -15,7 +15,7 @@ function harness(opts: { time?: string; done?: boolean; granted?: boolean; at: D
   let fired = 0;
   const state: AppState = {
     ...defaultState(),
-    completions: opts.done ? [{ date: day('2026-06-10'), level: 3 }] : [],
+    completions: opts.done ? [{ date: day('2026-06-10'), session: 1, level: 3 }] : [],
     settings: { language: 'en', reminderTime: parseReminderTime(opts.time) },
   };
   const ports: ReminderPorts = {

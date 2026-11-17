@@ -22,16 +22,20 @@ export function defaultState(): AppState {
 const isRecord = (raw: unknown): raw is Record<string, unknown> =>
   typeof raw === 'object' && raw !== null && !Array.isArray(raw);
 
+/** Data saved before multi-session days has no `session`; it was the day's only one. */
+const parseSession = (raw: unknown): number => (Number.isInteger(raw) && (raw as number) >= 1 ? (raw as number) : 1);
+
 function parseCompletions(raw: unknown): Completion[] {
   if (!Array.isArray(raw)) return [];
-  const byDay = new Map<string, Completion>();
+  const bySession = new Map<string, Completion>();
   for (const entry of raw) {
     if (!isRecord(entry)) continue;
     const date = parseLocalDay(entry.date);
     const level = parseLevel(entry.level);
-    if (date && level) byDay.set(date, { date, level, rating: parseRating(entry.rating) });
+    const session = parseSession(entry.session);
+    if (date && level) bySession.set(`${date}#${session}`, { date, session, level, rating: parseRating(entry.rating) });
   }
-  return [...byDay.values()].sort((a, b) => a.date.localeCompare(b.date));
+  return [...bySession.values()].sort((a, b) => a.date.localeCompare(b.date) || a.session - b.session);
 }
 
 /** Total: any input yields a valid AppState, each field falling back to its default. */

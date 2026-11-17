@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   LocalStorage,
   MemoryStorage,
+  parseAppState,
   STORAGE_KEY,
   type KeyValueStore,
   type Storage,
@@ -25,8 +26,8 @@ function fakeStore(initial: Record<string, string> = {}): KeyValueStore {
 const sample: AppState = {
   level: 4,
   completions: [
-    { date: day('2026-03-01'), level: 3 },
-    { date: day('2026-03-02'), level: 4 },
+    { date: day('2026-03-01'), session: 1, level: 3 },
+    { date: day('2026-03-02'), session: 1, level: 4 },
   ],
   settings: { language: 'vi', reminderTime: parseReminderTime('07:30') },
 };
@@ -64,11 +65,11 @@ describe('LocalStorage on bad data', () => {
     const text = JSON.stringify({
       level: 9,
       completions: [
-        { date: '2026-02-30', level: 3 },
-        { date: '2026-03-02', level: 2 },
-        { date: '2026-03-02', level: 5 },
-        { date: '2026-03-01', level: 3 },
-        { date: 'x', level: 3 },
+        { date: '2026-02-30', session: 1, level: 3 },
+        { date: '2026-03-02', session: 1, level: 2 },
+        { date: '2026-03-02', session: 1, level: 5 },
+        { date: '2026-03-01', session: 1, level: 3 },
+        { date: 'x', session: 1, level: 3 },
       ],
       settings: { reminderTime: '25:99' },
     });
@@ -103,7 +104,7 @@ describe('ratings', () => {
     const storage = new LocalStorage(fakeStore());
     const rated: AppState = {
       ...sample,
-      completions: [{ date: day('2026-03-01'), level: 3, rating: 'hard' }],
+      completions: [{ date: day('2026-03-01'), session: 1, level: 3, rating: 'hard' }],
     };
     storage.save(rated);
     expect(storage.load().completions).toEqual(rated.completions);
@@ -113,8 +114,8 @@ describe('ratings', () => {
     const text = JSON.stringify({
       level: 3,
       completions: [
-        { date: '2026-03-01', level: 3 },
-        { date: '2026-03-02', level: 3, rating: 'meh' },
+        { date: '2026-03-01', session: 1, level: 3 },
+        { date: '2026-03-02', session: 1, level: 3, rating: 'meh' },
       ],
     });
     const { completions } = new LocalStorage(fakeStore({ [STORAGE_KEY]: text })).load();
@@ -129,5 +130,31 @@ describe('parseLocalDay', () => {
 
   it('accepts a real leap day', () => {
     expect(parseLocalDay('2028-02-29')).toBe('2028-02-29');
+  });
+});
+
+describe('sessions within a day', () => {
+  it('reads saved data from before sessions existed as session 1', () => {
+    const state = parseAppState({ level: 3, completions: [{ date: '2026-06-01', level: 3 }] });
+    expect(state.completions).toEqual([{ date: '2026-06-01', session: 1, level: 3, rating: undefined }]);
+  });
+
+  it('keeps several sessions of one day, ordered, and drops duplicates of the same session', () => {
+    const state = parseAppState({
+      completions: [
+        { date: '2026-06-02', session: 2, level: 3 },
+        { date: '2026-06-01', session: 1, level: 3 },
+        { date: '2026-06-02', session: 1, level: 3 },
+        { date: '2026-06-02', session: 1, level: 4 },
+        { date: '2026-06-03', session: 0, level: 3 },
+      ],
+    });
+    expect(state.completions.map((c) => `${c.date}#${c.session}`)).toEqual([
+      '2026-06-01#1',
+      '2026-06-02#1',
+      '2026-06-02#2',
+      '2026-06-03#1',
+    ]);
+    expect(state.completions[1]?.level).toBe(4);
   });
 });

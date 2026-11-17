@@ -7,7 +7,7 @@ const day = (s: string): LocalDay => {
   if (!parsed) throw new Error(`bad day ${s}`);
   return parsed;
 };
-const done = (...days: string[]): Completion[] => days.map((d) => ({ date: day(d), level: 3 }));
+const done = (...days: string[]): Completion[] => days.map((d) => ({ date: day(d), session: 1, level: 3 }));
 
 it('runs under the zone the npm script asked for', () => {
   expect(Intl.DateTimeFormat().resolvedOptions().timeZone).toBe(process.env.TZ);
@@ -83,7 +83,7 @@ describe('currentStreak', () => {
 
   it('gives 3 for practice at 23:30 on three consecutive days', () => {
     const practiced = [9, 10, 11].map((d) => localDay(new Date(2026, 5, d, 23, 30)));
-    const completions = practiced.map((date): Completion => ({ date, level: 3 }));
+    const completions = practiced.map((date): Completion => ({ date, session: 1, level: 3 }));
     expect(currentStreak(completions, localDay(new Date(2026, 5, 11, 23, 45)))).toBe(3);
   });
 
@@ -93,7 +93,7 @@ describe('currentStreak', () => {
       new Date(2026, 10, 1, 23, 30),
       new Date(2026, 10, 2, 23, 30),
     ];
-    const completions = practiced.map((d): Completion => ({ date: localDay(d), level: 3 }));
+    const completions = practiced.map((d): Completion => ({ date: localDay(d), session: 1, level: 3 }));
     expect(completions.map((c) => c.date)).toEqual(['2026-10-31', '2026-11-01', '2026-11-02']);
     expect(currentStreak(completions, day('2026-11-02'))).toBe(3);
     expect(longestStreak(completions)).toBe(3);

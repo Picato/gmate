@@ -32,7 +32,7 @@ export function progressView(state: AppState, today: LocalDay): ProgressView {
   const current = currentStreak(state.completions, today);
   const longest = longestStreak(state.completions);
   return {
-    totalSessions: done.size,
+    totalSessions: state.completions.length,
     currentStreak: current,
     longestStreak: longest,
     currentStreakLabel: dayCount(current),

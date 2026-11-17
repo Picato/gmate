@@ -19,7 +19,7 @@ const at = (s: string): ReminderTime => {
   if (!parsed) throw new Error(`bad time ${s}`);
   return parsed;
 };
-const done = (...days: string[]): Completion[] => days.map((d) => ({ date: day(d), level: 3 }));
+const done = (...days: string[]): Completion[] => days.map((d) => ({ date: day(d), session: 1, level: 3 }));
 
 const today = day('2026-06-10');
 const noon = new Date(2026, 5, 10, 12, 0);
@@ -100,6 +100,6 @@ describe('needsBanner', () => {
 
   it('agrees with the localDay of now', () => {
     const now = new Date(2026, 5, 10, 0, 0);
-    expect(needsBanner(now, [{ date: localDay(now), level: 3 }])).toBe(false);
+    expect(needsBanner(now, [{ date: localDay(now), session: 1, level: 3 }])).toBe(false);
   });
 });

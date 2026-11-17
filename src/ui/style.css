@@ -403,6 +403,27 @@ a {
   cursor: default;
 }
 
+#next-session {
+  width: 100%;
+  min-height: 3.25rem;
+  padding: 0.75rem 1.5rem;
+  border: 2px solid var(--brass);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--accent);
+  font-size: 1.0625rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#next-session:hover {
+  background: var(--accent-soft);
+}
+
+#next-session[hidden] {
+  display: none;
+}
+
 #rating-prompt {
   display: grid;
   gap: 0.6rem;

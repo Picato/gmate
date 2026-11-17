@@ -11,7 +11,7 @@ const day = (s: string): LocalDay => {
 const stateWith = (level: 1 | 2 | 3 | 4 | 5, ...days: string[]): AppState => ({
   ...defaultState(),
   level,
-  completions: days.map((d) => ({ date: day(d), level })),
+  completions: days.map((d) => ({ date: day(d), session: 1, level })),
 });
 
 describe('progressView', () => {
