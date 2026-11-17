@@ -854,19 +854,6 @@ a {
   max-width: 44rem;
 }
 
-@media (min-width: 56rem) {
-  .layout {
-    grid-template-columns: 17rem minmax(0, 44rem);
-    gap: 2rem;
-    justify-content: center;
-  }
-
-  .past {
-    position: sticky;
-    top: 1rem;
-  }
-}
-
 .past {
   padding: 1rem;
   border: 1px solid var(--line);
@@ -875,20 +862,110 @@ a {
   box-shadow: var(--shadow);
 }
 
-.past summary {
+.past-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
   cursor: pointer;
+  text-align: left;
+}
+
+.past-label {
   font-family: var(--font-display);
   font-size: 1.25rem;
 }
 
 .past-count {
   color: var(--muted);
-  font-family: var(--font-body);
   font-size: 0.9375rem;
 }
 
+/* A square with two borders, turned so the corner points the way the panel will fold. */
+.past-chevron {
+  flex: none;
+  order: 3;
+  margin-left: auto;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-bottom: 2px solid var(--accent);
+  border-left: 2px solid var(--accent);
+  transform: rotate(135deg);
+  transition: transform 150ms ease;
+}
+
+.past[data-collapsed='true'] .past-chevron {
+  transform: rotate(-45deg);
+}
+
+.past[data-collapsed='true'] .past-body {
+  display: none;
+}
+
+.past-body {
+  margin-top: 0.75rem;
+}
+
+@media (min-width: 56rem) {
+  .layout {
+    grid-template-columns: auto minmax(0, 44rem);
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  .past {
+    position: sticky;
+    top: 1rem;
+    width: 17rem;
+    transition: width 150ms ease;
+  }
+
+  .past-chevron {
+    transform: rotate(45deg);
+  }
+
+  .past[data-collapsed='true'] {
+    width: 3.25rem;
+    padding: 0.85rem 0;
+  }
+
+  .past[data-collapsed='true'] .past-chevron {
+    transform: rotate(225deg);
+  }
+
+  .past[data-collapsed='true'] .past-toggle {
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    padding: 0;
+    text-align: center;
+  }
+
+  .past[data-collapsed='true'] .past-chevron {
+    order: 0;
+    margin: 0;
+  }
+
+  .past[data-collapsed='true'] .past-label {
+    font-size: 1rem;
+    writing-mode: vertical-rl;
+  }
+
+  .past[data-collapsed='true'] .past-count {
+    font-size: 0.8125rem;
+  }
+}
+
+.past-toggle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
 .past-empty {
-  margin: 0.75rem 0 0;
+  margin: 0;
   color: var(--muted);
   font-size: 0.9375rem;
 }
@@ -901,7 +978,7 @@ a {
   display: grid;
   gap: 0.5rem;
   max-height: 70vh;
-  margin: 0.75rem 0 0;
+  margin: 0;
   padding: 0;
   overflow-y: auto;
   list-style: none;
