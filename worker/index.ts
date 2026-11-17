@@ -20,6 +20,8 @@ export interface Env extends MailEnv {
   readonly SESSION_SECRET?: string | undefined;
   /** The one email address allowed to log in. */
   readonly ALLOWED_EMAIL?: string | undefined;
+  /** 'true' skips login. Only `npm run dev:worker` passes it; never set it on the deployed Worker. */
+  readonly AUTH_DISABLED?: string | undefined;
 }
 
 /** Fetched by the browser without cookies (manifest, icons) or by the login page itself. */
@@ -81,6 +83,9 @@ async function verifyLink(url: URL, secret: string, allowed: string): Promise<Re
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
+    if (env.AUTH_DISABLED === 'true') {
+      return url.pathname === '/api/state' ? handleState(request, env.STATE) : env.ASSETS.fetch(request);
+    }
     const secret = env.SESSION_SECRET;
     const allowed = env.ALLOWED_EMAIL ? normaliseEmail(env.ALLOWED_EMAIL) : undefined;
     if (!secret || !allowed) return text('Server is not configured', 500);

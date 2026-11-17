@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "TZ=America/Los_Angeles vitest run && TZ=Australia/Sydney vitest run",
     "check-catalog": "node scripts/check-catalog.mjs",
-    "deploy": "npm run build && wrangler deploy"
+    "deploy": "npm run build && wrangler deploy",
+    "dev:worker": "npm run build && wrangler dev --var AUTH_DISABLED:true"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

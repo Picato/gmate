@@ -201,6 +201,17 @@ export function mountSession(
   const progress = createProgressPanel();
   const reminder = createReminderPanel(storage, now);
 
+  const logout = el('button', { type: 'button', className: 'logout' }, 'Log out');
+  logout.addEventListener('click', async () => {
+    logout.disabled = true;
+    try {
+      await fetch('/auth/logout', { method: 'POST' });
+      location.reload();
+    } catch {
+      logout.disabled = false;
+    }
+  });
+
   button.addEventListener('click', () => {
     asking = true;
     update();
@@ -280,6 +291,7 @@ export function mountSession(
     session,
     progress.node,
     reminder.node,
+    el('footer', { className: 'page-foot' }, logout),
   );
   update();
   reminder.start();

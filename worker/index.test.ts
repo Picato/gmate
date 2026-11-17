@@ -77,6 +77,19 @@ describe('access control', () => {
   });
 });
 
+describe('local mode', () => {
+  it('skips login when AUTH_DISABLED is true', async () => {
+    const env = makeEnv({ AUTH_DISABLED: 'true', SESSION_SECRET: undefined, ALLOWED_EMAIL: undefined });
+    expect(await (await worker.fetch(page('/'), env)).text()).toBe('<app>');
+    expect((await worker.fetch(new Request('https://gmate.test/api/state'), env)).status).toBe(204);
+  });
+
+  it.each([undefined, 'false', '1', 'TRUE'])('still requires login when AUTH_DISABLED is %s', async (value) => {
+    const response = await worker.fetch(page('/'), makeEnv({ AUTH_DISABLED: value }));
+    expect(await response.text()).toContain('Email me a link');
+  });
+});
+
 describe('login link', () => {
   it('emails a link to the allowed address, case-insensitively', async () => {
     await worker.fetch(requestLink(' Me@Example.com '), makeEnv());

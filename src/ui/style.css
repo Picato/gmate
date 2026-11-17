@@ -769,3 +769,28 @@ a {
     transition-delay: 0ms !important;
   }
 }
+
+.page-foot {
+  display: flex;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+
+.logout {
+  padding: 0.5rem 1rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.logout:hover:not(:disabled) {
+  color: var(--ink);
+}
+
+.logout:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}

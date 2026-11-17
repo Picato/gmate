@@ -20,6 +20,7 @@ label{display:block;font-weight:600;margin-bottom:6px}
 input,button{width:100%;font:inherit;border-radius:14px;padding:12px 14px}
 input{border:1px solid var(--line);background:transparent;color:inherit}
 button{margin-top:12px;border:0;background:var(--brass);color:var(--on-brass);font-weight:700;cursor:pointer}
+button.secondary{background:transparent;color:var(--ink);border:2px solid var(--brass)}
 button:disabled{opacity:.6;cursor:default}
 :focus-visible{outline:3px solid var(--focus);outline-offset:2px}
 #msg{margin:14px 0 0;min-height:1.5em}
@@ -44,9 +45,17 @@ if (new URLSearchParams(location.search).has('login')) {
   msg.textContent = 'That link is invalid or expired. Request a new one.';
   msg.className = 'err';
 }
+const COOLDOWN_MS = 120000;
+let sentAt = 0;
 document.getElementById('form').addEventListener('submit', async (event) => {
   event.preventDefault();
   const button = event.target.querySelector('button');
+  const waitMs = sentAt + COOLDOWN_MS - Date.now();
+  if (waitMs > 0) {
+    msg.className = '';
+    msg.textContent = 'A link was just sent. You can send another in ' + Math.ceil(waitMs / 1000) + ' seconds.';
+    return;
+  }
   button.disabled = true;
   msg.className = '';
   msg.textContent = 'Sending…';
@@ -57,7 +66,10 @@ document.getElementById('form').addEventListener('submit', async (event) => {
       body: JSON.stringify({ email: document.getElementById('email').value }),
     });
     if (!response.ok) throw new Error();
-    msg.textContent = 'If that email is allowed, a link is on its way. Check your inbox. You can ask for another in 2 minutes.';
+    sentAt = Date.now();
+    button.textContent = 'Send again';
+    button.className = 'secondary';
+    msg.textContent = 'If that email is allowed, a link is on its way. Check your inbox.';
   } catch {
     msg.className = 'err';
     msg.textContent = 'Something went wrong. Try again.';
