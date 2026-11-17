@@ -75,6 +75,34 @@ The plan depends only on the level, the session number and the catalog, so it is
 
 The pick is by rotation, not by memory. gmate does not record which exercises you have already done, so once a pool is used up an exercise can come round again. Preferring exercises you have not seen is a natural next step.
 
+## How gmate finds the YouTube video for a level
+
+gmate does not search YouTube. Every video is **picked by hand and stored in the catalog**, and the level reaches it through the lesson it belongs to. Only `lesson` exercises have videos. Warm-ups, chords, rhythm and scales are text only.
+
+In `src/data/catalog.ts` each lesson lists its level range and its video ids by language:
+
+```ts
+lesson('lesson-blues', 10, [3, 5], '12-bar blues in A', { en: 'rLm99QI8eWs', vi: 'u9CRfc20FN0' }),
+//      id             min  levels  title                  YouTube video ids
+```
+
+The path from your level to a video is:
+
+1. **Level → lessons.** Your level picks the eligible lessons, those whose range includes it. At level 3 that is seven lessons, at level 1 only three.
+2. **Lesson → one pick.** The planner takes one of them with the same rotation as every other slot (see above), so the video changes from session to session.
+3. **Lesson → video, by language.** `videoFor` in `src/core/video.ts` uses the language you chose on the page (English or Tiếng Việt):
+   - the lesson has a video in that language: it is used,
+   - it has none but has an English one: the English video is shown with a note, "No Tiếng Việt video for this lesson yet, showing English",
+   - it has no video at all: no player is shown, and the lesson gets a **Search YouTube** link for "*<lesson title>* guitar lesson" instead.
+4. **Embed.** The video is shown in a privacy-friendly `youtube-nocookie.com` player. Changing the language swaps only the player, so a lesson is not reset when you press "Mark session done".
+
+Because the match is lesson to level, a video's difficulty is whatever level range the lesson was given when it was added. A video for beginners should sit on a lesson with a low range such as `[1, 2]`, and an advanced one on `[4, 5]`.
+
+### Adding or checking videos
+
+- To add a video, add a `lesson(...)` entry with its level range and video ids. The id is the part after `v=` in the YouTube URL.
+- Run `npm run check-catalog`. It asks YouTube's oEmbed endpoint about every id and reports whether it is `ok`, `missing` or `not embeddable`. It also lists lessons that have no video in a language. It exits with an error if any video fails, so it is safe to run in CI.
+
 ## Sessions, days and streaks
 
 - You can finish several sessions in a day. After one, **Next session →** starts the next.
