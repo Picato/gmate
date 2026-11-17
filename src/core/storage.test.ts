@@ -158,3 +158,16 @@ describe('sessions within a day', () => {
     expect(state.completions[1]?.level).toBe(4);
   });
 });
+
+describe('recorded exercises', () => {
+  it('keeps valid entries and drops malformed ones', () => {
+    const state = parseAppState({
+      completions: [
+        { date: '2026-06-01', level: 3, exercises: [{ id: 'a', minutes: 5 }, { id: '', minutes: 5 }, { id: 'b', minutes: 0 }, 'x'] },
+        { date: '2026-06-02', level: 3, exercises: [] },
+        { date: '2026-06-03', level: 3, exercises: 'junk' },
+      ],
+    });
+    expect(state.completions.map((c) => c.exercises)).toEqual([[{ id: 'a', minutes: 5 }], undefined, undefined]);
+  });
+});

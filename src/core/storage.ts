@@ -8,6 +8,7 @@ import {
   parseReminderTime,
   type AppState,
   type Completion,
+  type PlannedExercise,
 } from './types.ts';
 
 export interface Storage {
@@ -25,6 +26,16 @@ const isRecord = (raw: unknown): raw is Record<string, unknown> =>
 /** Data saved before multi-session days has no `session`; it was the day's only one. */
 const parseSession = (raw: unknown): number => (Number.isInteger(raw) && (raw as number) >= 1 ? (raw as number) : 1);
 
+function parseExercises(raw: unknown): PlannedExercise[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const exercises = raw.flatMap((entry): PlannedExercise[] =>
+    isRecord(entry) && typeof entry.id === 'string' && entry.id !== '' && Number.isInteger(entry.minutes) && (entry.minutes as number) > 0
+      ? [{ id: entry.id, minutes: entry.minutes as number }]
+      : [],
+  );
+  return exercises.length > 0 ? exercises : undefined;
+}
+
 function parseCompletions(raw: unknown): Completion[] {
   if (!Array.isArray(raw)) return [];
   const bySession = new Map<string, Completion>();
@@ -33,7 +44,13 @@ function parseCompletions(raw: unknown): Completion[] {
     const date = parseLocalDay(entry.date);
     const level = parseLevel(entry.level);
     const session = parseSession(entry.session);
-    if (date && level) bySession.set(`${date}#${session}`, { date, session, level, rating: parseRating(entry.rating) });
+    if (date && level) bySession.set(`${date}#${session}`, {
+        date,
+        session,
+        level,
+        rating: parseRating(entry.rating),
+        exercises: parseExercises(entry.exercises),
+      });
   }
   return [...bySession.values()].sort((a, b) => a.date.localeCompare(b.date) || a.session - b.session);
 }

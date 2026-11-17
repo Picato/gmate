@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { CATALOG } from '../data/catalog.ts';
 import { defaultState } from '../core/storage.ts';
 import { parseLocalDay, parseReminderTime, type AppState, type Exercise, type Language, type LocalDay, type Rating } from '../core/types.ts';
-import { currentSession, levelChangeMessage, markDone, sessionView, setLanguage } from './sessionView.ts';
+import { backfillExercises, currentSession, historyView, levelChangeMessage, markDone, reviewItems, sessionView, setLanguage } from './sessionView.ts';
 import { progressView } from './progressView.ts';
 
 const STUB_GUIDE = { goal: 'g', steps: ['s'], tips: [], check: 'c' };
@@ -292,5 +292,59 @@ describe('several sessions in one day', () => {
   it('counts every session in the total but a day once in the streak', () => {
     const state = markDone(finishFirst(), today, 2, 'easy');
     expect(progressView(state, today)).toMatchObject({ totalSessions: 2, currentStreak: 1 });
+  });
+});
+
+describe('history of finished sessions', () => {
+  const finish = (state: AppState, d: string, session: number, rating: Rating) => {
+    const view = sessionView(state, day(d), CATALOG, session);
+    return markDone(state, day(d), session, rating, view.exercises);
+  };
+
+  it('records the exercises of a finished session', () => {
+    const state = finish(defaultState(), '2026-06-10', 1, 'right');
+    const planned = sessionView(defaultState(), day('2026-06-10'), CATALOG, 1);
+    expect(state.completions[0]?.exercises).toEqual(planned.exercises);
+    expect(planned.exercises.every((e) => e.minutes > 0)).toBe(true);
+  });
+
+  it('lists finished sessions newest first with their lessons', () => {
+    let state = finish(defaultState(), '2026-06-09', 1, 'right');
+    state = finish(state, '2026-06-10', 1, 'easy');
+    state = finish(state, '2026-06-10', 2, 'hard');
+    const entries = historyView(state, CATALOG);
+    expect(entries.map((e) => e.key)).toEqual(['2026-06-10#2', '2026-06-10#1', '2026-06-09#1']);
+    expect(entries[2]).toMatchObject({ levelLabel: 'Level 3', ratingLabel: 'About right', totalLabel: '30 min' });
+    expect(entries[2]?.titles.length).toBeGreaterThanOrEqual(3);
+  });
+
+  it('shows what was recorded even after the catalog changes', () => {
+    const state = finish(defaultState(), '2026-06-10', 1, 'right');
+    const recordedIds = state.completions[0]?.exercises?.map((e) => e.id);
+    const shuffled = [...CATALOG].reverse();
+    expect(historyView(state, shuffled)[0]?.exercises.map((e) => e.id)).toEqual(recordedIds);
+  });
+
+  it('keeps the minutes the session was planned with and offers guides and video', () => {
+    const state = finish(defaultState(), '2026-06-10', 1, 'right');
+    const entry = historyView(state, CATALOG)[0]!;
+    const items = reviewItems(entry, 'en');
+    expect(items.map((i) => i.minutesLabel)).toEqual(entry.exercises.map((e) => `${e.minutes} min`));
+    expect(items.every((i) => i.guide.steps.length >= 3)).toBe(true);
+    expect(items.some((i) => i.media?.type === 'video')).toBe(true);
+  });
+
+  it('rebuilds sessions saved before history existed, then pins them', () => {
+    const old = markDone(defaultState(), day('2026-06-10'), 1, 'right');
+    expect(old.completions[0]?.exercises).toBeUndefined();
+    const planned = sessionView(defaultState(), day('2026-06-10'), CATALOG, 1);
+    expect(historyView(old, CATALOG)[0]?.exercises.map((e) => e.id)).toEqual(planned.exercises.map((e) => e.id));
+    const pinned = backfillExercises(old, CATALOG);
+    expect(pinned.completions[0]?.exercises).toEqual(planned.exercises);
+    expect(backfillExercises(pinned, CATALOG)).toBe(pinned);
+  });
+
+  it('is empty before the first session', () => {
+    expect(historyView(defaultState(), CATALOG)).toEqual([]);
   });
 });

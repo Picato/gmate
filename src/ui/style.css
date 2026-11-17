@@ -69,7 +69,7 @@ body {
 }
 
 #app {
-  max-width: 44rem;
+  max-width: 68rem;
   margin: 0 auto;
   padding: 2rem 1rem 4rem;
 }
@@ -168,7 +168,8 @@ a {
 
 /* Session card */
 
-#session {
+#session,
+#review {
   background: var(--surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow);
@@ -195,7 +196,8 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
-#plan {
+#plan,
+#review-plan {
   counter-reset: step;
   list-style: none;
   margin: 0;
@@ -724,7 +726,8 @@ a {
     padding-top: 1.25rem;
   }
 
-  #session {
+  #session,
+  #review {
     padding: 1.25rem 1rem 1.5rem;
     border-radius: 18px;
   }
@@ -835,5 +838,136 @@ a {
 .guide-check {
   padding: 0.5rem 0.75rem;
   border-radius: var(--radius-md);
+  background: var(--accent-soft);
+}
+
+/* Layout: past sessions beside the plan on wide screens, above it on narrow ones. */
+
+.layout {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.main {
+  min-width: 0;
+  max-width: 44rem;
+}
+
+@media (min-width: 56rem) {
+  .layout {
+    grid-template-columns: 17rem minmax(0, 44rem);
+    gap: 2rem;
+    justify-content: center;
+  }
+
+  .past {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+.past {
+  padding: 1rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.past summary {
+  cursor: pointer;
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+}
+
+.past-count {
+  color: var(--muted);
+  font-family: var(--font-body);
+  font-size: 0.9375rem;
+}
+
+.past-empty {
+  margin: 0.75rem 0 0;
+  color: var(--muted);
+  font-size: 0.9375rem;
+}
+
+.past-empty[hidden] {
+  display: none;
+}
+
+.past-list {
+  display: grid;
+  gap: 0.5rem;
+  max-height: 70vh;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.past-item {
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: var(--surface-2);
+  text-align: left;
+  cursor: pointer;
+}
+
+.past-item:hover,
+.past-item[aria-current='true'] {
+  border-color: var(--brass);
+  background: var(--accent-soft);
+}
+
+.past-when {
+  font-weight: 600;
+}
+
+.past-meta,
+.past-titles {
+  color: var(--muted);
+  font-size: 0.8125rem;
+}
+
+.past-titles {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+#review {
+  margin-bottom: 1.5rem;
+}
+
+#review[hidden] {
+  display: none;
+}
+
+#review-meta {
+  margin: 0;
+  color: var(--muted);
+}
+
+#review-back {
+  width: 100%;
+  margin-top: 1rem;
+  min-height: 3rem;
+  padding: 0.6rem 1.25rem;
+  border: 2px solid var(--brass);
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--accent);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#review-back:hover {
   background: var(--accent-soft);
 }

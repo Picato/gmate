@@ -5,8 +5,12 @@ import { el, svg } from './dom.ts';
 import { createReminderPanel } from './reminderPanel.ts';
 import { progressView } from './progressView.ts';
 import { createProgressPanel } from './progressPanel.ts';
+import { createPastPanel } from './pastPanel.ts';
 import {
+  backfillExercises,
   currentSession,
+  historyView,
+  reviewItems,
   LANGUAGE_CHOICES,
   levelChangeMessage,
   markDone,
@@ -159,7 +163,11 @@ export function mountSession(
   now: () => Date,
 ): void {
   const day = localDay(now());
-  let sessionNumber = currentSession(storage.load(), day);
+  const loaded = storage.load();
+  const backfilled = backfillExercises(loaded, catalog);
+  if (backfilled !== loaded) storage.save(backfilled);
+  let sessionNumber = currentSession(backfilled, day);
+  let reviewing: string | undefined;
   const view = (): SessionView => sessionView(storage.load(), day, catalog, sessionNumber);
   const initial = view();
   const mediaAreas = new Map<string, HTMLDivElement>();
@@ -175,9 +183,8 @@ export function mountSession(
     );
   }
   buildPlan(initial.items);
-  const language = languageControl(storage.load().settings.language, (chosen) => {
-    storage.save(setLanguage(storage.load(), chosen));
-    language.select(chosen);
+  /** Replaces every player with a fresh one, which also stops anything that is playing. */
+  function refreshMedia(): void {
     for (const item of view().items) {
       const old = mediaAreas.get(item.id);
       if (!old || !item.media) continue;
@@ -185,6 +192,11 @@ export function mountSession(
       old.replaceWith(fresh);
       mediaAreas.set(item.id, fresh);
     }
+  }
+  const language = languageControl(storage.load().settings.language, (chosen) => {
+    storage.save(setLanguage(storage.load(), chosen));
+    language.select(chosen);
+    refreshMedia();
   });
 
   const current = el('strong', { id: 'streak-current' });
@@ -198,7 +210,7 @@ export function mountSession(
       const choice = el('button', { type: 'button', className: 'rating', id: `rate-${rating}` }, label);
       choice.addEventListener('click', () => {
         const before = storage.load();
-        const after = markDone(before, day, sessionNumber, rating);
+        const after = markDone(before, day, sessionNumber, rating, view().exercises);
         storage.save(after);
         levelNote.textContent = levelChangeMessage(before.level, after.level);
         update();
@@ -240,7 +252,41 @@ export function mountSession(
     update();
   });
 
+  const reviewTitle = el('h2', { id: 'review-title' });
+  const reviewMeta = el('p', { id: 'review-meta' });
+  const reviewPlan = el('ol', { id: 'review-plan' });
+  const reviewBack = el('button', { id: 'review-back', type: 'button' }, '← Back to today');
+  reviewBack.addEventListener('click', () => review(undefined));
+  const reviewSection = el(
+    'section',
+    { id: 'review', hidden: true },
+    el('header', { className: 'session-head' }, reviewTitle, reviewMeta),
+    reviewPlan,
+    reviewBack,
+  );
+  const past = createPastPanel((key) => review(key === reviewing ? undefined : key));
+
+  /** Shows a finished session in place of today's, or goes back to today when given nothing. */
+  function review(key: string | undefined): void {
+    reviewing = key;
+    const entry = key === undefined ? undefined : historyView(storage.load(), catalog).find((e) => e.key === key);
+    if (!entry) reviewing = undefined;
+    if (entry) refreshMedia();
+    session.hidden = entry !== undefined;
+    reviewSection.hidden = entry === undefined;
+    reviewPlan.replaceChildren(
+      ...(entry ? reviewItems(entry, storage.load().settings.language).map((item) => itemNode(item, item.media ? mediaNode(item.media, item.title) : undefined)) : []),
+    );
+    if (entry) {
+      reviewTitle.textContent = `Reviewing ${dateHeading(entry.date)}`;
+      reviewMeta.textContent = [`Session ${entry.session}`, entry.levelLabel, entry.totalLabel].join(' · ');
+      reviewSection.scrollIntoView({ block: 'start' });
+    }
+    past.render(historyView(storage.load(), catalog), reviewing);
+  }
+
   function update(): void {
+    past.render(historyView(storage.load(), catalog), reviewing);
     const v = view();
     title.textContent = v.title;
     total.textContent = v.totalLabel;
@@ -302,11 +348,12 @@ export function mountSession(
         levelLabel,
       ),
     ),
-    reminder.banner,
-    session,
-    progress.node,
-    reminder.node,
-    el('footer', { className: 'page-foot' }, logout),
+    el(
+      'div',
+      { className: 'layout' },
+      past.node,
+      el('div', { className: 'main' }, reminder.banner, session, reviewSection, progress.node, reminder.node, el('footer', { className: 'page-foot' }, logout)),
+    ),
   );
   update();
   reminder.start();

@@ -120,6 +120,7 @@ Because the match is lesson to level, a video's difficulty is whatever level ran
 - Every session is recorded with its date, its number within the day, its level and your rating.
 - A **streak** counts days, not sessions. Two sessions on one day count once. The streak stays alive through yesterday while today is still open.
 - **Total sessions** in the progress panel counts every session.
+- **Past sessions** are listed in the panel on the left (above the plan on a phone). Click one to reopen that session's full content, with its guides and videos, and use "Back to today" to return. Each finished session stores the exercises and minutes it contained, so later catalog changes cannot rewrite your history. Sessions saved before this existed are rebuilt from their level and position once, then stored.
 
 ## Sync and login
 

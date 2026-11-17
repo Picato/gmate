@@ -57,12 +57,17 @@ export type SessionPlan = {
 export const RATINGS = ['easy', 'right', 'hard'] as const;
 export type Rating = (typeof RATINGS)[number];
 
+/** An exercise as it was planned for a finished session, so history survives catalog changes. */
+export type PlannedExercise = { readonly id: string; readonly minutes: number };
+
 export type Completion = {
   readonly date: LocalDay;
   /** 1-based order within its day; a day can hold several sessions. */
   readonly session: number;
   readonly level: Level;
   readonly rating?: Rating | undefined;
+  /** Absent on sessions saved before history existed. */
+  readonly exercises?: readonly PlannedExercise[] | undefined;
 };
 
 export type Settings = {
